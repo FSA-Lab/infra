@@ -1,5 +1,20 @@
-*override.tf
-*.tfvars
+# Terraform working dirs
+**/.terraform/*
 *.tfstate
-*.tfstate.backup
-.terraform/
+*.tfstate.*
+
+# Ignore real tfvars
+*.tfvars
+
+# BUT keep examples
+!*.tfvars.example
+
+# CLI config
+.terraformrc
+terraform.rc
+
+# Sensitive overrides
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json

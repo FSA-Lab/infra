@@ -1,0 +1,30 @@
+# Provisioning Tasks
+
+## Task 0. Setup tools
+
+1. Install TFLint
+
+> curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+
+Then run `tflint --init`
+
+2. Run `terraform init` per environment.
+
+## Task 1. Setup tfstate storage
+
+1. Create remote data sources (Azure Blob Storage), with versioning enabled.
+2. Configure Terraform to use ABS as remote backend.
+3. Ensure no tfstate exist locally.
+
+## Task 2. Secure needed service quotas
+
+1. AKS with enough resource allocation.
+2. Other Azure services if needed.
+3. Other provider services if needed.
+
+## Task 3. Configure Terraform
+
+## Task 4. Tracking infrastructure
+
+- For code/configuration, use Git
+- For state, use Blob Storage

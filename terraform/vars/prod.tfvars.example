@@ -1,0 +1,3 @@
+environment   = "prod"
+cluster_name  = "REPLACE_ME"
+vnet_name     = "REPLACE_ME"
