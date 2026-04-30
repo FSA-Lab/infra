@@ -1,0 +1,3 @@
+module "aks" {
+  source = "./aks"
+}

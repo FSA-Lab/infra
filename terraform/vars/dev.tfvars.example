@@ -1,3 +1,0 @@
-environment   = "dev"
-cluster_name  = "REPLACE_ME"
-vnet_name     = "REPLACE_ME"

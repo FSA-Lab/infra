@@ -28,3 +28,8 @@ Then run `tflint --init`
 
 - For code/configuration, use Git
 - For state, use Blob Storage
+
+# Notes
+
+1. Sub-modules should be placed in its own file or directory.
+2. Sub-modules should reuse root `providers.tf` and `versions.tf` (symbolic link or copy).
