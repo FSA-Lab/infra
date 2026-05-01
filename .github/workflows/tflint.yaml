@@ -24,8 +24,8 @@ jobs:
           tflint_version: latest
           cache: true
 
-      - name: Init TFLint (debug)
-        run: ls && cat terraform/.tflint.hcl && tflint --init
+      - name: Init TFLint
+        run: cp terraform/.tflint.hcl .tflint.hcl && tflint --init
         env:
           # https://github.com/terraform-linters/tflint/blob/master/docs/user-guide/plugins.md#avoiding-rate-limiting
           GITHUB_TOKEN: ${{ github.token }}
