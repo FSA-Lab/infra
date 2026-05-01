@@ -22,7 +22,7 @@ jobs:
         name: Setup TFLint
         with:
           tflint_version: latest
-          cache: true
+          cache: false
 
       - name: Init TFLint
         run: tflint --init
@@ -31,4 +31,4 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
 
       - name: Run TFLint
-        run: tflint -f compact --recursive --chdir terraform
+        run: tflint --init && tflint -f compact --recursive --chdir terraform
