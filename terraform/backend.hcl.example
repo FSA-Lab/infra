@@ -1,4 +1,0 @@
-resource_group_name  = "REPLACE_ME"
-storage_account_name = "REPLACE_ME"
-container_name       = "tfstate"
-key                  = "REPLACE_ME.tfstate"
