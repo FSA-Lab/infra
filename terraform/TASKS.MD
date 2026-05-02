@@ -33,3 +33,12 @@ Then run `tflint --init`
 
 1. Sub-modules should be placed in its own file or directory.
 2. Sub-modules should reuse root `providers.tf` and `versions.tf` (symbolic link or copy).
+3. Root directory only contains `providers.tf` and `versions.tf` for the purpose of defining global providers and versions. Terraform should not be executed in root directory, but in sub-module directories.
+4. Feel free to use local set of `providers.tf` and `versions.tf` in sub-module directories if there are specific provider or version requirements for that module.
+
+# Workflow
+
+1. `cd terraform/modules/<module_name>`
+2. `terraform init`
+3. `terraform plan -out=<optional_plan_file>`
+4. `terraform apply <optional_plan_file>`
