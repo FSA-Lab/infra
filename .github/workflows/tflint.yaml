@@ -1,10 +1,11 @@
+# On pull request to main, run TFLint
 name: Terraform Lint
 
 on:
   # push:
   #   branches: [main]
   pull_request:
-    branches: [dev]
+    branches: [main]
 
 jobs:
   tflint:

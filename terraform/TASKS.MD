@@ -42,3 +42,8 @@ Then run `tflint --init`
 2. `terraform init`
 3. `terraform plan -out=<optional_plan_file>`
 4. `terraform apply <optional_plan_file>`
+
+# Module activation order
+
+1. `backend` (should be activated only if the remote `backend` is not yet created)
+<!-- 2. `aks` (requires `backend`) -->
