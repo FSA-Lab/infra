@@ -1,0 +1,12 @@
+# On infra code changed, sync to Azure
+name: Terraform Deploy
+on:
+  push:
+    branches: [main]
+
+jobs:
+  terraform-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout source code
