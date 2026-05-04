@@ -42,10 +42,6 @@ This is a Service Bus to be used as a message queue for the app. Its sole purpos
 
 This is an Azure SQL Database to be used as the main database for the app. Each service can have its own database, but for simplicity, we will use a single database for all services in this project.
 
-## Email
-
-This is a Azure Communication Service for sending emails from the app.
-
 ## Storage
 
 This is an Azure Blob Storage to be used as the main storage for the app. Its sole purpose is to store output files from the Export service, which will then be sent to users via email by the Email service.
@@ -59,3 +55,7 @@ GitHub is used as project container registry.
 ## CI Runner (partial)
 
 GitHub Actions is used as CI runner for the project. However, we still set up Jenkins in AKS for demonstration purposes, and it can be used as a CI runner if needed.
+
+## Email Service
+
+[TBA]
