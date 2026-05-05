@@ -41,10 +41,10 @@ jobs:
       - name: Setup Azure CLI
         uses: azure/cli@v3
         with:
-        azcliversion: latest
-        inlineScript: |
-          az account show
-          az storage -h
+          azcliversion: latest
+          inlineScript: |
+            az account show
+            az storage -h
 
       # Run the Terraform deployment script
       - name: Run Terraform Deployment
