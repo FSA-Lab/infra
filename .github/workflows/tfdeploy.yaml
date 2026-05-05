@@ -37,6 +37,7 @@ jobs:
         uses: azure/login@v3
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+
       - name: Setup Azure CLI
         uses: azure/cli@v3
         with:
