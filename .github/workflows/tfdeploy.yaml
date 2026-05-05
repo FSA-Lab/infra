@@ -8,13 +8,38 @@ jobs:
   terraform-deploy:
     runs-on: ubuntu-latest
     steps:
+      # Checkout the repository
       - uses: actions/checkout@v4
         name: Checkout source code
+
+      # Install Terraform
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
+        uses: hashicorp/setup-terraform@v3
+
+      # Cache plugins (after install, before init)
+      - name: Cache Terraform plugins
+        uses: actions/cache@v3
         with:
-          terraform_version: latest
-      # - name: Terraform Init
-      #   run: terraform -chdir=terraform init
-      # - name: Terraform Apply
-      #   run: terraform -chdir=terraform apply -auto-approve
+          path: ~/.terraform.d/plugin-cache
+          key: terraform-${{ runner.os }}-${{ hashFiles('**/.terraform.lock.hcl') }}
+
+      - name: Configure plugin cache
+        run: |
+          mkdir -p ~/.terraform.d
+          echo 'plugin_cache_dir="$HOME/.terraform.d/plugin-cache"' > ~/.terraformrc
+
+      # Setup Azure CLI
+      # - name: Setup Azure CLI
+      #   uses: azure/cli@v1
+      # - name: Azure Login
+      #   uses: azure/login@v1
+      #   with:
+      #     creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # Run the Terraform deployment script
+      - name: Run Terraform Deployment
+        run: ./scripts/apply-infra.sh
+
+      # Run the Helm deployment script
+      - name: Run Helm Deployment
+        run: ./scripts/helm.sh
