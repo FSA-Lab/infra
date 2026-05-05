@@ -4,3 +4,12 @@
 3. Accidentally uploaded tfout files to GitHub repo, which contain sensitive information.
    --> Immediate action: remove tfout files from the repo and destroy the infrastructure to invalidate the tfout files.
    --> Solution: remove tfout files from the repo, and add them to .gitignore.
+4. Need a way to access Azure via GitHub Actions
+   --> Solution: create a service principal with "Contributor" role:
+
+```
+az ad sp create-for-rbac \
+--name "gha-terraform" \
+--role Contributor \
+--scopes /subscriptions/<sub-id>
+```
