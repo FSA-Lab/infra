@@ -33,12 +33,17 @@ jobs:
           echo 'plugin_cache_dir="$HOME/.terraform.d/plugin-cache"' > ~/.terraformrc
 
       # Setup Azure CLI
-      - name: Setup Azure CLI
-        uses: azure/cli@v2
       - name: Azure Login
-        uses: azure/login@v2
+        uses: azure/login@v3
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Setup Azure CLI
+        uses: azure/cli@v3
+        with:
+        azcliversion: latest
+        inlineScript: |
+          az account show
+          az storage -h
 
       # Run the Terraform deployment script
       - name: Run Terraform Deployment
