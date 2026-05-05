@@ -10,7 +10,7 @@ set -e pipefail
 HOME_DIR=$(pwd)
 
 # Deploy the AKS module
-cd $HOME_DIR/modules/aks
+cd $HOME_DIR/terraform/modules/aks
 # terraform init
 # terraform apply -auto-approve
 
