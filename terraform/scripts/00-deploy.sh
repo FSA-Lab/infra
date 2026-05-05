@@ -3,6 +3,7 @@ set -e pipefail
 
 # This script is used to deploy Azure infrastructure using Terraform.
 
+HOME_DIR=$(pwd)
 DISPOSABle=true # This variable controls whether to destroy the infrastructure before deploying (excluding the remote state backend). Set to true currently for faster prototyping.
 
 # By default, run 01-base.sh, 02-aks.sh, and 03-app.sh sequentially.

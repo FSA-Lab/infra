@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
 
+  # Temporarily added PR trigger for testing
+  pull_request:
+    branches: [main]
+
 jobs:
   terraform-deploy:
     runs-on: ubuntu-latest
@@ -29,12 +33,18 @@ jobs:
           echo 'plugin_cache_dir="$HOME/.terraform.d/plugin-cache"' > ~/.terraformrc
 
       # Setup Azure CLI
-      # - name: Setup Azure CLI
-      #   uses: azure/cli@v1
-      # - name: Azure Login
-      #   uses: azure/login@v1
-      #   with:
-      #     creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Azure Login
+        uses: azure/login@v3
+        with:
+          creds: "${{ secrets.AZURE_CREDENTIALS }}"
+
+      - name: Setup Azure CLI
+        uses: azure/cli@v3
+        with:
+          azcliversion: latest
+          inlineScript: |
+            az account show
+            az storage -h
 
       # Run the Terraform deployment script
       - name: Run Terraform Deployment
