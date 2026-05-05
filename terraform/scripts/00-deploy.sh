@@ -7,10 +7,10 @@ DISPOSABle=true # This variable controls whether to destroy the infrastructure b
 
 # By default, run 01-base.sh, 02-aks.sh, and 03-app.sh sequentially.
 echo "Deploying base infrastructure..."
-bash $HOME_DIR/terraform/scripts/01-base.sh
+bash $ROOT_DIR/terraform/scripts/01-base.sh
 
 echo "Deploying AKS cluster..."
-bash $HOME_DIR/terraform/scripts/02-aks.sh
+bash $ROOT_DIR/terraform/scripts/02-aks.sh
 
 echo "Deploying app services..."
-bash $HOME_DIR/terraform/scripts/03-app.sh
+bash $ROOT_DIR/terraform/scripts/03-app.sh
