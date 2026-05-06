@@ -15,27 +15,11 @@ variable "account_replication_type" {
   type = string
 }
 
-variable "container_name" {
-  type = string
-}
-
 variable "service_plan_name" {
   type = string
 }
 
-variable "plan_sku_tier" {
-  type = string
-}
-
-variable "plan_sku_size" {
-  type = string
-}
-
 variable "function_app_name" {
-  type = string
-}
-
-variable "functions_version" {
   type = string
 }
 
