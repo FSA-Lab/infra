@@ -11,7 +11,5 @@ HOME_DIR=$(pwd)
 
 # Deploy the AKS module
 cd $HOME_DIR/terraform/modules/aks
-# terraform init
-# terraform apply -auto-approve
-
-echo "AKS cluster should have been deployed to Azure."
+terraform init
+terraform apply -auto-approve

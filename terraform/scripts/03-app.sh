@@ -7,6 +7,7 @@ set -e pipefail
 # PREREQUISITES:
 # 00-deploy-base.sh
 
+HOME_DIR=$(pwd)
 # Deploy Auth function
 
 # Deploy Import function

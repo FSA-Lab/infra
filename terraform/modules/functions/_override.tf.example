@@ -1,0 +1,84 @@
+
+variable "resource_group_name" {
+  default = "rg-cicd-lab-functions"
+}
+
+variable "location" {
+  default = "southeastasia"
+}
+
+variable "storage_account_name" {
+  default = "san"
+}
+
+variable "account_replication_type" {
+  default = "LRS"
+}
+
+variable "container_name" {
+  default = "ctn-functions"
+}
+
+variable "service_plan_name" {
+  default = "sp-functions"
+}
+
+variable "plan_sku_tier" {
+  default = "Dynamic"
+}
+
+variable "plan_sku_size" {
+  default = "Y1"
+}
+
+variable "function_app_name" {
+  default = "fn-cicd-lab"
+}
+
+variable "functions_version" {
+  default = "~4"
+}
+
+variable "worker_runtime" {
+  default = "node"
+}
+
+variable "run_from_package" {
+  default = "1"
+}
+
+variable "app_settings" {
+  default = {}
+}
+
+variable "tags" {
+  default = {}
+}
+
+variable "servicebus_namespace_name" {
+  default = "sb-lab"
+}
+
+variable "servicebus_queues" {
+  default = ["import-queue", "export-queue"]
+}
+
+variable "servicebus_sku" {
+  default = "Standard"
+}
+
+variable "os_type" {
+  default = "Linux"
+}
+
+variable "sku_name" {
+  default = "Y1"
+}
+
+variable "min_tls_version" {
+  default = "TLS1_2"
+}
+
+variable "account_tier" {
+  default = "Standard"
+}
