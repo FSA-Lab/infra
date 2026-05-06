@@ -1,0 +1,29 @@
+variable "aks_location" { default = "-" }
+variable "aks_name" { default = "cluster" }
+variable "aks_resource_group_name" { default = "rg-aks" }
+variable "aks_dns_prefix" { default = "labaks" }
+variable "aks_vnet_name" { default = "aks-vnet" }
+variable "aks_vnet_address_space" { default = ["10.0.0.0/16"] }
+variable "aks_subnet_name" { default = "aks-subnet" }
+variable "aks_subnet_address_prefixes" { default = ["10.0.0.0/24"] }
+variable "aks_log_analytics_workspace_name" { default = "aks-law" }
+variable "aks_log_analytics_sku" { default = "PerGB2018" }
+variable "aks_log_analytics_retention_days" { default = 30 }
+variable "aks_kubernetes_version" { default = "1.34.4" }
+variable "aks_network_plugin" { default = "azure" }
+variable "aks_network_policy" { default = "azure" }
+variable "aks_service_cidr" { default = "10.0.1.0/24" } 
+variable "aks_dns_service_ip" { default = "10.0.1.10" }
+
+# NODE: System
+variable "aks_system_node_count" { default = 1 }
+variable "aks_system_vm_size" { default = "size1" }
+
+# NODE: Tools
+variable "aks_tools_node_count" { default = 1 }
+variable "aks_tools_vm_size" { default = "size2" }
+
+# NODE: Apps
+variable "aks_apps_node_count" { default = 1 }
+variable "aks_apps_vm_size" { default = "size3" } 
+variable "aks_tags" { default = {} }

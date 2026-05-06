@@ -1,0 +1,26 @@
+variable "account_replication_type" {
+  default = "LRS"
+}
+
+variable "container_name" {
+  default = "tfstate"
+}
+
+variable "location" {
+  default = "southeastasia"
+}
+
+variable "resource_group_name" {
+  default = "rg-state"
+}
+
+variable "storage_account_name" {
+  default = "account-name"
+}
+
+variable "tags" {
+  default = {
+    environment = "development"
+    project     = "cicd-lab"
+  }
+}
