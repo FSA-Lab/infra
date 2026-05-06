@@ -1,29 +1,26 @@
-variable "aks_location" { default = "-" }
-variable "aks_name" { default = "cluster" }
-variable "aks_resource_group_name" { default = "rg-aks" }
-variable "aks_dns_prefix" { default = "labaks" }
-variable "aks_vnet_name" { default = "aks-vnet" }
-variable "aks_vnet_address_space" { default = ["10.0.0.0/16"] }
-variable "aks_subnet_name" { default = "aks-subnet" }
-variable "aks_subnet_address_prefixes" { default = ["10.0.0.0/24"] }
-variable "aks_log_analytics_workspace_name" { default = "aks-law" }
-variable "aks_log_analytics_sku" { default = "PerGB2018" }
-variable "aks_log_analytics_retention_days" { default = 30 }
-variable "aks_kubernetes_version" { default = "1.34.4" }
-variable "aks_network_plugin" { default = "azure" }
-variable "aks_network_policy" { default = "azure" }
-variable "aks_service_cidr" { default = "10.0.1.0/24" } 
-variable "aks_dns_service_ip" { default = "10.0.1.10" }
-
-# NODE: System
-variable "aks_system_node_count" { default = 1 }
-variable "aks_system_vm_size" { default = "size1" }
-
-# NODE: Tools
-variable "aks_tools_node_count" { default = 1 }
-variable "aks_tools_vm_size" { default = "size2" }
-
 # NODE: Apps
-variable "aks_apps_node_count" { default = 1 }
-variable "aks_apps_vm_size" { default = "size3" } 
-variable "aks_tags" { default = {} }
+variable "AKS_APPS_NODE_COUNT" { default = 1 }
+variable "AKS_APPS_VM_SIZE" { default = "size3" }
+variable "AKS_DNS_PREFIX" { default = "labaks" }
+variable "AKS_DNS_SERVICE_IP" { default = "10.0.1.10" }
+variable "AKS_KUBERNETES_VERSION" { default = "1.34.4" }
+variable "AKS_LOCATION" { default = "-" }
+variable "AKS_LOG_ANALYTICS_RETENTION_DAYS" { default = 30 }
+variable "AKS_LOG_ANALYTICS_SKU" { default = "PerGB2018" }
+variable "AKS_LOG_ANALYTICS_WORKSPACE_NAME" { default = "aks-law" }
+variable "AKS_NAME" { default = "cluster" }
+variable "AKS_NETWORK_PLUGIN" { default = "azure" }
+variable "AKS_NETWORK_POLICY" { default = "azure" }
+variable "AKS_RESOURCE_GROUP_NAME" { default = "rg-aks" }
+variable "AKS_SERVICE_CIDR" { default = "10.0.1.0/24" }
+variable "AKS_SUBNET_ADDRESS_PREFIXES" { default = ["10.0.0.0/24"] }
+variable "AKS_SUBNET_NAME" { default = "aks-subnet" }
+# NODE: System
+variable "AKS_SYSTEM_NODE_COUNT" { default = 1 }
+variable "AKS_SYSTEM_VM_SIZE" { default = "size1" }
+variable "AKS_TAGS" { default = {} }
+# NODE: Tools
+variable "AKS_TOOLS_NODE_COUNT" { default = 1 }
+variable "AKS_TOOLS_VM_SIZE" { default = "size2" }
+variable "AKS_VNET_ADDRESS_SPACE" { default = ["10.0.0.0/16"] }
+variable "AKS_VNET_NAME" { default = "aks-vnet" }

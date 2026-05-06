@@ -1,49 +1,49 @@
 resource "azurerm_resource_group" "this" {
-  name     = var.resource_group_name
-  location = var.location
+  name     = var.FUNCTIONS_RESOURCE_GROUP_NAME
+  location = var.FUNCTIONS_LOCATION
 
-  tags = var.tags
+  tags = var.FUNCTIONS_TAGS
 }
 
 resource "azurerm_storage_account" "this" {
-  name                     = var.storage_account_name
-  resource_group_name      = var.resource_group_name
-  location                 = var.location
-  account_tier             = var.account_tier
-  account_replication_type = var.account_replication_type
-  min_tls_version          = var.min_tls_version
-  tags                     = var.tags
+  name                     = var.FUNCTIONS_STORAGE_ACCOUNT_NAME
+  resource_group_name      = var.FUNCTIONS_RESOURCE_GROUP_NAME
+  location                 = var.FUNCTIONS_LOCATION
+  account_tier             = var.FUNCTIONS_ACCOUNT_TIER
+  account_replication_type = var.FUNCTIONS_ACCOUNT_REPLICATION_TYPE
+  min_tls_version          = var.FUNCTIONS_MIN_TLS_VERSION
+  tags                     = var.FUNCTIONS_TAGS
 }
 
 resource "azurerm_servicebus_namespace" "this" {
-  name                = var.servicebus_namespace_name
-  location            = var.location
-  resource_group_name = var.resource_group_name
-  sku                 = var.servicebus_sku
+  name                = var.FUNCTIONS_SERVICEBUS_NAMESPACE_NAME
+  location            = var.FUNCTIONS_LOCATION
+  resource_group_name = var.FUNCTIONS_RESOURCE_GROUP_NAME
+  sku                 = var.FUNCTIONS_SERVICEBUS_SKU
 
-  tags = var.tags
+  tags = var.FUNCTIONS_TAGS
 }
 
 resource "azurerm_servicebus_queue" "this" {
   namespace_id         = azurerm_servicebus_namespace.this.id
-  for_each             = toset(var.servicebus_queues)
+  for_each             = toset(var.FUNCTIONS_SERVICEBUS_QUEUES)
   partitioning_enabled = true
   name                 = each.value
   dead_lettering_on_message_expiration = true
 }
 
 resource "azurerm_service_plan" "this" {
-  os_type             = var.os_type
-  location            = var.location
-  name                = var.service_plan_name
-  sku_name            = var.sku_name
-  resource_group_name = var.resource_group_name
+  os_type             = var.FUNCTIONS_OS_TYPE
+  location            = var.FUNCTIONS_LOCATION
+  name                = var.FUNCTIONS_SERVICE_PLAN_NAME
+  sku_name            = var.FUNCTIONS_SKU_NAME
+  resource_group_name = var.FUNCTIONS_RESOURCE_GROUP_NAME
 }
 
 resource "azurerm_linux_function_app" "this" {
-  name                = var.function_app_name
-  location            = var.location
-  resource_group_name = var.resource_group_name
+  name                = var.FUNCTIONS_FUNCTION_APP_NAME
+  location            = var.FUNCTIONS_LOCATION
+  resource_group_name = var.FUNCTIONS_RESOURCE_GROUP_NAME
   service_plan_id     = azurerm_service_plan.this.id
 
   storage_account_name       = azurerm_storage_account.this.name
@@ -54,11 +54,11 @@ resource "azurerm_linux_function_app" "this" {
   }
 
   app_settings = merge({
-    FUNCTIONS_WORKER_RUNTIME = var.worker_runtime
-    WEBSITE_RUN_FROM_PACKAGE = var.run_from_package
-  }, var.app_settings)
+    FUNCTIONS_WORKER_RUNTIME = var.FUNCTIONS_WORKER_RUNTIME
+    WEBSITE_RUN_FROM_PACKAGE = var.FUNCTIONS_RUN_FROM_PACKAGE
+  }, var.FUNCTIONS_APP_SETTINGS)
 
-  tags = var.tags
+  tags = var.FUNCTIONS_TAGS
 
   site_config {
 

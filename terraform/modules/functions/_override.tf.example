@@ -1,84 +1,64 @@
 
-variable "resource_group_name" {
-  default = "rg-cicd-lab-functions"
-}
-
-variable "location" {
-  default = "southeastasia"
-}
-
-variable "storage_account_name" {
-  default = "san"
-}
-
-variable "account_replication_type" {
+variable "FUNCTIONS_ACCOUNT_REPLICATION_TYPE" {
   default = "LRS"
 }
-
-variable "container_name" {
+variable "FUNCTIONS_ACCOUNT_TIER" {
+  default = "Standard"
+}
+variable "FUNCTIONS_APP_SETTINGS" {
+  default = {}
+}
+variable "FUNCTIONS_CONTAINER_NAME" {
   default = "ctn-functions"
 }
-
-variable "service_plan_name" {
-  default = "sp-functions"
-}
-
-variable "plan_sku_tier" {
-  default = "Dynamic"
-}
-
-variable "plan_sku_size" {
-  default = "Y1"
-}
-
-variable "function_app_name" {
+variable "FUNCTIONS_FUNCTION_APP_NAME" {
   default = "fn-cicd-lab"
 }
-
-variable "functions_version" {
+variable "FUNCTIONS_FUNCTIONS_VERSION" {
   default = "~4"
 }
-
-variable "worker_runtime" {
-  default = "node"
+variable "FUNCTIONS_LOCATION" {
+  default = "southeastasia"
 }
-
-variable "run_from_package" {
-  default = "1"
-}
-
-variable "app_settings" {
-  default = {}
-}
-
-variable "tags" {
-  default = {}
-}
-
-variable "servicebus_namespace_name" {
-  default = "sb-lab"
-}
-
-variable "servicebus_queues" {
-  default = ["import-queue", "export-queue"]
-}
-
-variable "servicebus_sku" {
-  default = "Standard"
-}
-
-variable "os_type" {
-  default = "Linux"
-}
-
-variable "sku_name" {
-  default = "Y1"
-}
-
-variable "min_tls_version" {
+variable "FUNCTIONS_MIN_TLS_VERSION" {
   default = "TLS1_2"
 }
-
-variable "account_tier" {
+variable "FUNCTIONS_OS_TYPE" {
+  default = "Linux"
+}
+variable "FUNCTIONS_PLAN_SKU_SIZE" {
+  default = "Y1"
+}
+variable "FUNCTIONS_PLAN_SKU_TIER" {
+  default = "Dynamic"
+}
+variable "FUNCTIONS_RESOURCE_GROUP_NAME" {
+  default = "rg-cicd-lab-functions"
+}
+variable "FUNCTIONS_RUN_FROM_PACKAGE" {
+  default = "1"
+}
+variable "FUNCTIONS_SERVICEBUS_NAMESPACE_NAME" {
+  default = "sb-lab"
+}
+variable "FUNCTIONS_SERVICEBUS_QUEUES" {
+  default = ["import-queue", "export-queue"]
+}
+variable "FUNCTIONS_SERVICEBUS_SKU" {
   default = "Standard"
+}
+variable "FUNCTIONS_SERVICE_PLAN_NAME" {
+  default = "sp-functions"
+}
+variable "FUNCTIONS_SKU_NAME" {
+  default = "Y1"
+}
+variable "FUNCTIONS_STORAGE_ACCOUNT_NAME" {
+  default = "san"
+}
+variable "FUNCTIONS_TAGS" {
+  default = {}
+}
+variable "FUNCTIONS_WORKER_RUNTIME" {
+  default = "node"
 }
