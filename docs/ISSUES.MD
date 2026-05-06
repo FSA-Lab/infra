@@ -26,3 +26,6 @@ env:
   TF_VAR_ARM_CLIENT_SECRET: ${{ secrets.TF_VAR_ARM_CLIENT_SECRET }}
   TF_VAR_APP_NAME: ${{ vars.APP_NAME }}
 ```
+
+7. Despite adding terraform plugin cache configuration in the workflow file, the cache is not being utilized, leading to longer execution times.
+   --> Solution: ensure that the plugin cache directory is correctly set up and that the workflow has permission to write to it.
