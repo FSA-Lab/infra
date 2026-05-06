@@ -51,6 +51,10 @@ variable "FUNCTIONS_SERVICEBUS_SKU" {
   type = string
 }
 
+variable "FUNCTIONS_SERVICEBUS_QUEUE_PARTITIONING_ENABLED" {
+  type = bool
+}
+
 variable "FUNCTIONS_OS_TYPE" {
   type = string
 }
@@ -65,4 +69,81 @@ variable "FUNCTIONS_ACCOUNT_TIER" {
 
 variable "FUNCTIONS_MIN_TLS_VERSION" {
   type = string
+}
+
+variable "FUNCTIONS_LOG_ANALYTICS_WORKSPACE_NAME" {
+  type = string
+}
+
+variable "FUNCTIONS_LOG_ANALYTICS_SKU" {
+  type = string
+}
+
+variable "FUNCTIONS_LOG_ANALYTICS_RETENTION_DAYS" {
+  type = number
+}
+
+variable "FUNCTIONS_APP_INSIGHTS_NAME" {
+  type = string
+}
+
+variable "FUNCTIONS_POSTGRES_SERVER_NAME" {
+  type = string
+}
+
+variable "FUNCTIONS_POSTGRES_VERSION" {
+  type = string
+}
+
+variable "FUNCTIONS_POSTGRES_ADMIN_LOGIN" {
+  type = string
+}
+
+variable "FUNCTIONS_POSTGRES_ADMIN_PASSWORD" {
+  type      = string
+  sensitive = true
+}
+
+variable "FUNCTIONS_POSTGRES_SKU_NAME" {
+  type = string
+}
+
+variable "FUNCTIONS_POSTGRES_STORAGE_MB" {
+  type = number
+}
+
+variable "FUNCTIONS_POSTGRES_BACKUP_RETENTION_DAYS" {
+  type = number
+}
+
+variable "FUNCTIONS_POSTGRES_GEO_REDUNDANT_BACKUP_ENABLED" {
+  type = bool
+}
+
+variable "FUNCTIONS_POSTGRES_PUBLIC_NETWORK_ACCESS_ENABLED" {
+  type = bool
+}
+
+variable "FUNCTIONS_POSTGRES_DB_NAME" {
+  type = string
+}
+
+variable "FUNCTIONS_POSTGRES_DB_CHARSET" {
+  type = string
+}
+
+variable "FUNCTIONS_POSTGRES_DB_COLLATION" {
+  type = string
+}
+
+variable "FUNCTIONS_POSTGRES_ALLOW_AZURE_SERVICES" {
+  type = bool
+}
+
+variable "FUNCTIONS_POSTGRES_FIREWALL_RULES" {
+  type = list(object({
+    name             = string
+    start_ip_address = string
+    end_ip_address   = string
+  }))
 }

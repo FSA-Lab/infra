@@ -36,7 +36,10 @@ variable "FUNCTIONS_SERVICEBUS_QUEUES" {
   default = ["import-queue", "export-queue"]
 }
 variable "FUNCTIONS_SERVICEBUS_SKU" {
-  default = "Standard"
+  default = "Basic"
+}
+variable "FUNCTIONS_SERVICEBUS_QUEUE_PARTITIONING_ENABLED" {
+  default = false
 }
 variable "FUNCTIONS_SERVICE_PLAN_NAME" {
   default = "sp-functions"
@@ -52,4 +55,60 @@ variable "FUNCTIONS_TAGS" {
 }
 variable "FUNCTIONS_WORKER_RUNTIME" {
   default = "node"
+}
+
+variable "FUNCTIONS_LOG_ANALYTICS_WORKSPACE_NAME" {
+  default = "law-cicd-lab-functions"
+}
+variable "FUNCTIONS_LOG_ANALYTICS_SKU" {
+  default = "PerGB2018"
+}
+variable "FUNCTIONS_LOG_ANALYTICS_RETENTION_DAYS" {
+  default = 30
+}
+variable "FUNCTIONS_APP_INSIGHTS_NAME" {
+  default = "appi-cicd-lab-functions"
+}
+
+variable "FUNCTIONS_POSTGRES_SERVER_NAME" {
+  default = "pg-cicd-lab"
+}
+variable "FUNCTIONS_POSTGRES_VERSION" {
+  default = "17"
+}
+variable "FUNCTIONS_POSTGRES_ADMIN_LOGIN" {
+  default = "pgadmin"
+}
+variable "FUNCTIONS_POSTGRES_ADMIN_PASSWORD" {
+  default = "ChangeMe1234!"
+}
+variable "FUNCTIONS_POSTGRES_SKU_NAME" {
+  default = "B_Standard_B1ms"
+}
+variable "FUNCTIONS_POSTGRES_STORAGE_MB" {
+  default = 32768
+}
+variable "FUNCTIONS_POSTGRES_BACKUP_RETENTION_DAYS" {
+  default = 7
+}
+variable "FUNCTIONS_POSTGRES_GEO_REDUNDANT_BACKUP_ENABLED" {
+  default = false
+}
+variable "FUNCTIONS_POSTGRES_PUBLIC_NETWORK_ACCESS_ENABLED" {
+  default = true
+}
+variable "FUNCTIONS_POSTGRES_DB_NAME" {
+  default = "transactions"
+}
+variable "FUNCTIONS_POSTGRES_DB_CHARSET" {
+  default = "UTF8"
+}
+variable "FUNCTIONS_POSTGRES_DB_COLLATION" {
+  default = "en_US.utf8"
+}
+variable "FUNCTIONS_POSTGRES_ALLOW_AZURE_SERVICES" {
+  default = true
+}
+variable "FUNCTIONS_POSTGRES_FIREWALL_RULES" {
+  default = []
 }
