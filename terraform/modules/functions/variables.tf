@@ -66,7 +66,3 @@ variable "FUNCTIONS_ACCOUNT_TIER" {
 variable "FUNCTIONS_MIN_TLS_VERSION" {
   type = string
 }
-
-variable "FUNCTIONS_WORKER_RUNTIME" {
-  type = string
-}
