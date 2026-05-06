@@ -8,14 +8,8 @@ set -e pipefail
 # 00-deploy-base.sh
 
 HOME_DIR=$(pwd)
-# Deploy Auth function
 
-# Deploy Import function
-
-# Deploy Export function
-
-# Deploy Database durable function
-
-# Deploy Email function
-
-echo "App services should have been deployed to Azure."
+# Deploy the Functions module
+cd $HOME_DIR/terraform/modules/functions
+terraform init
+terraform apply -auto-approve
