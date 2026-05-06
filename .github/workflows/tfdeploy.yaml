@@ -12,6 +12,7 @@ jobs:
   terraform-deploy:
     runs-on: ubuntu-latest
     env:
+      TF_PLUGIN_CACHE_DIR: ${{ github.workspace }}/.terraform.d/plugin-cache
       TF_VAR_AKS_APPS_NODE_COUNT: ${{ vars.TF_VAR_AKS_APPS_NODE_COUNT }}
       TF_VAR_AKS_APPS_VM_SIZE: ${{ vars.TF_VAR_AKS_APPS_VM_SIZE }}
       TF_VAR_AKS_DNS_PREFIX: ${{ vars.TF_VAR_AKS_DNS_PREFIX }}
@@ -71,7 +72,7 @@ jobs:
 
       - name: Configure plugin cache
         run: |
-          mkdir -p ~/.terraform.d
+          mkdir -p ${{ env.TF_PLUGIN_CACHE_DIR }}
           echo 'plugin_cache_dir="$HOME/.terraform.d/plugin-cache"' > ~/.terraformrc
 
       # Setup Azure CLI
