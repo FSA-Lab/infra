@@ -7,12 +7,14 @@ resource "azurerm_resource_group" "this" {
 
 resource "azurerm_storage_account" "this" {
   name                     = var.FUNCTIONS_STORAGE_ACCOUNT_NAME
-  resource_group_name      = var.FUNCTIONS_RESOURCE_GROUP_NAME
+  resource_group_name      = azurerm_resource_group.this.name
   location                 = var.FUNCTIONS_LOCATION
   account_tier             = var.FUNCTIONS_ACCOUNT_TIER
   account_replication_type = var.FUNCTIONS_ACCOUNT_REPLICATION_TYPE
   min_tls_version          = var.FUNCTIONS_MIN_TLS_VERSION
   tags                     = var.FUNCTIONS_TAGS
+
+  depends_on = [ azurerm_resource_group.this ]
 }
 
 resource "azurerm_servicebus_namespace" "this" {
