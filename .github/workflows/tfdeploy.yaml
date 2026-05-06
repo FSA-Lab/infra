@@ -51,6 +51,7 @@ jobs:
       TF_VAR_FUNCTIONS_SKU_NAME: ${{ vars.TF_VAR_FUNCTIONS_SKU_NAME }}
       TF_VAR_FUNCTIONS_STORAGE_ACCOUNT_NAME: ${{ vars.TF_VAR_FUNCTIONS_STORAGE_ACCOUNT_NAME }}
       TF_VAR_FUNCTIONS_TAGS: ${{ vars.TF_VAR_FUNCTIONS_TAGS }}
+
     steps:
       # Checkout the repository
       - uses: actions/checkout@v4
