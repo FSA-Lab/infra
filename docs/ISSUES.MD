@@ -13,3 +13,16 @@ az ad sp create-for-rbac \
 --role Contributor \
 --scopes /subscriptions/<sub-id>
 ```
+
+5. Remote `tfstate` becomes locked after every GitHub Actions run, preventing subsequent runs from acquiring the lock and causing failures.
+   --> Temporary solution: manually remove lease of the file in Azure Storage Explorer.
+
+6. Don't know how to pass variables to terraform in GitHub Actions
+   --> Solution: create environment variables in GitHub repo, and reference them in the workflow file. For example:
+
+```
+env:
+  TF_VAR_ARM_CLIENT_ID: ${{ secrets.TF_VAR_ARM_CLIENT_ID }}
+  TF_VAR_ARM_CLIENT_SECRET: ${{ secrets.TF_VAR_ARM_CLIENT_SECRET }}
+  TF_VAR_APP_NAME: ${{ vars.APP_NAME }}
+```
