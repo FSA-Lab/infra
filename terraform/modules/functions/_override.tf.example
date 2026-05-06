@@ -8,9 +8,6 @@ variable "FUNCTIONS_ACCOUNT_TIER" {
 variable "FUNCTIONS_APP_SETTINGS" {
   default = {}
 }
-variable "FUNCTIONS_CONTAINER_NAME" {
-  default = "ctn-functions"
-}
 variable "FUNCTIONS_FUNCTION_APP_NAME" {
   default = "fn-cicd-lab"
 }
@@ -25,12 +22,6 @@ variable "FUNCTIONS_MIN_TLS_VERSION" {
 }
 variable "FUNCTIONS_OS_TYPE" {
   default = "Linux"
-}
-variable "FUNCTIONS_PLAN_SKU_SIZE" {
-  default = "Y1"
-}
-variable "FUNCTIONS_PLAN_SKU_TIER" {
-  default = "Dynamic"
 }
 variable "FUNCTIONS_RESOURCE_GROUP_NAME" {
   default = "rg-cicd-lab-functions"
