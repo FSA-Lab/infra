@@ -1,0 +1,26 @@
+# NODE: Apps
+variable "AKS_APPS_NODE_COUNT" { default = 1 }
+variable "AKS_APPS_VM_SIZE" { default = "size3" }
+variable "AKS_DNS_PREFIX" { default = "labaks" }
+variable "AKS_DNS_SERVICE_IP" { default = "10.0.1.10" }
+variable "AKS_KUBERNETES_VERSION" { default = "1.34.4" }
+variable "AKS_LOCATION" { default = "-" }
+variable "AKS_LOG_ANALYTICS_RETENTION_DAYS" { default = 30 }
+variable "AKS_LOG_ANALYTICS_SKU" { default = "PerGB2018" }
+variable "AKS_LOG_ANALYTICS_WORKSPACE_NAME" { default = "aks-law" }
+variable "AKS_NAME" { default = "cluster" }
+variable "AKS_NETWORK_PLUGIN" { default = "azure" }
+variable "AKS_NETWORK_POLICY" { default = "azure" }
+variable "AKS_RESOURCE_GROUP_NAME" { default = "rg-aks" }
+variable "AKS_SERVICE_CIDR" { default = "10.0.1.0/24" }
+variable "AKS_SUBNET_ADDRESS_PREFIXES" { default = ["10.0.0.0/24"] }
+variable "AKS_SUBNET_NAME" { default = "aks-subnet" }
+# NODE: System
+variable "AKS_SYSTEM_NODE_COUNT" { default = 1 }
+variable "AKS_SYSTEM_VM_SIZE" { default = "size1" }
+variable "AKS_TAGS" { default = {} }
+# NODE: Tools
+variable "AKS_TOOLS_NODE_COUNT" { default = 1 }
+variable "AKS_TOOLS_VM_SIZE" { default = "size2" }
+variable "AKS_VNET_ADDRESS_SPACE" { default = ["10.0.0.0/16"] }
+variable "AKS_VNET_NAME" { default = "aks-vnet" }

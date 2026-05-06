@@ -1,4 +1,4 @@
-output "aks_resource_group_name" {
+output "AKS_RESOURCE_GROUP_NAME" {
   description = "The AKS resource group name."
   value       = azurerm_resource_group.aks_rg.name
 }
