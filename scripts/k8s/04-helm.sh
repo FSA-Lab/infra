@@ -12,7 +12,7 @@ helm dependency update "$CHART_PATH"
 
 if [ -n "$AKS_RESOURCE_GROUP_NAME" ]; then
   umask 077
-  EXTRA_VALUES_FILE=$(mktemp --tmpdir cicd-platform-aks-overrides.XXXXXX.yaml)
+  EXTRA_VALUES_FILE=$(mktemp -t cicd-platform-aks-overrides.XXXXXX.yaml)
   trap 'rm -f "$EXTRA_VALUES_FILE"' EXIT
   cat > "$EXTRA_VALUES_FILE" <<YAML
 ingress-nginx:
