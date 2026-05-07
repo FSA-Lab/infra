@@ -137,6 +137,12 @@ resource "azurerm_linux_function_app" "this" {
   site_config {
 
   }
+
+  lifecycle {
+    ignore_changes = [
+      site_config[0].application_insights_connection_string
+    ]
+  }
 }
 
 data "azurerm_monitor_diagnostic_categories" "function_app" {
@@ -161,6 +167,13 @@ resource "azurerm_monitor_diagnostic_setting" "function_app" {
       category = metric.value
       enabled  = true
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      enabled_log,
+      metric
+    ]
   }
 }
 
@@ -187,6 +200,13 @@ resource "azurerm_monitor_diagnostic_setting" "storage" {
       enabled  = true
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      enabled_log,
+      metric
+    ]
+  }
 }
 
 data "azurerm_monitor_diagnostic_categories" "servicebus" {
@@ -212,6 +232,13 @@ resource "azurerm_monitor_diagnostic_setting" "servicebus" {
       enabled  = true
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      enabled_log,
+      metric
+    ]
+  }
 }
 
 data "azurerm_monitor_diagnostic_categories" "postgres" {
@@ -236,5 +263,12 @@ resource "azurerm_monitor_diagnostic_setting" "postgres" {
       category = metric.value
       enabled  = true
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      enabled_log,
+      metric
+    ]
   }
 }

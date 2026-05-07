@@ -86,7 +86,8 @@ resource "azurerm_kubernetes_cluster_node_pool" "aks_tools" {
 
   lifecycle {
     ignore_changes = [
-      tags
+      tags,
+      upgrade_settings
     ]
   }
 }
@@ -106,7 +107,8 @@ resource "azurerm_kubernetes_cluster_node_pool" "aks_apps" {
   ]
   lifecycle {
     ignore_changes = [
-      tags
+      tags,
+      upgrade_settings
     ]
   }
 }
