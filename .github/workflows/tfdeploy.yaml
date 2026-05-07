@@ -106,10 +106,9 @@ jobs:
             az account show
             az storage -h
 
-      # Temporarily skip Terraform deployment for this PR
       # Run the Terraform deployment script
-      # - name: Run Terraform Deployment
-      #   run: ./scripts/apply-infra.sh
+      - name: Run Terraform Deployment
+        run: ./scripts/apply-infra.sh
 
       # Run the Helm deployment script
       - name: Run Helm Deployment

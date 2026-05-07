@@ -62,6 +62,12 @@ resource "azurerm_kubernetes_cluster" "aks_cluster" {
 
   role_based_access_control_enabled = true
   tags                              = var.AKS_TAGS
+
+  lifecycle {
+    ignore_changes = [
+      default_node_pool[0].upgrade_settings
+    ]
+  }
 }
 
 resource "azurerm_kubernetes_cluster_node_pool" "aks_tools" {
@@ -77,6 +83,12 @@ resource "azurerm_kubernetes_cluster_node_pool" "aks_tools" {
   node_taints = [
     "workload=tools:NoSchedule"
   ]
+
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
+  }
 }
 
 resource "azurerm_kubernetes_cluster_node_pool" "aks_apps" {
@@ -92,4 +104,9 @@ resource "azurerm_kubernetes_cluster_node_pool" "aks_apps" {
   node_taints = [
     "workload=apps:NoSchedule"
   ]
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
+  }
 }
