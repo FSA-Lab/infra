@@ -32,7 +32,7 @@ jenkins:
     installPlugins:
       - kubernetes:4296.v20a_7e4d77cf6
       - configuration-as-code:1810.v9b_c30a_249a_4c
-      - oic-auth
+      - oic-auth:4.420.v0475fd2a_b_4f4
       - sonar:2.17.2
       - workflow-aggregator:596.v8c21c963d92d
     JCasC:
@@ -51,7 +51,7 @@ jenkins:
                       nodeUsageMode: NORMAL
                       containers:
                         - name: "jnlp"
-                          image: "jenkins/inbound-agent:latest"
+                          image: "jenkins/inbound-agent:jdk17"
                         - name: "azure-cli"
                           image: "mcr.microsoft.com/azure-cli:2.62.0"
                           command: "cat"
