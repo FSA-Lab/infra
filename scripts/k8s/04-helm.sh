@@ -17,11 +17,16 @@ cleanup_orphaned_resource() {
   local owner_release=""
   local owner_namespace=""
 
+  if [ -z "$kind" ] || [ -z "$name" ]; then
+    echo "ERROR: cleanup_orphaned_resource requires kind and name." >&2
+    return 1
+  fi
+
   if ! kubectl -n "$NAMESPACE" get "$kind" "$name" >/dev/null 2>&1; then
     return 0
   fi
 
-  owner_info=$(kubectl -n "$NAMESPACE" get "$kind" "$name" -o jsonpath='{.metadata.annotations.meta\.helm\.sh/release-name}{"|"}{.metadata.annotations.meta\.helm\.sh/release-namespace}' 2>/dev/null || true)
+  owner_info=$(kubectl -n "$NAMESPACE" get "$kind" "$name" -o jsonpath="{.metadata.annotations['meta.helm.sh/release-name']}{'|'}{.metadata.annotations['meta.helm.sh/release-namespace']}" 2>/dev/null || true)
   owner_release=${owner_info%%|*}
   owner_namespace=${owner_info#*|}
 
