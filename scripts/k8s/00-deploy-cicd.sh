@@ -28,5 +28,5 @@ kubectl -n "$NAMESPACE" rollout status "deploy/$TRIVY_DEPLOYMENT_NAME" --timeout
 if [ "$KEYVAULT_SYNC_REQUIRED" = "true" ]; then
   kubectl -n "$NAMESPACE" rollout status "deploy/$KEYVAULT_SYNC_DEPLOYMENT_NAME" --timeout=180s
 else
-  echo "INFO: skipping required rollout gate for $KEYVAULT_SYNC_DEPLOYMENT_NAME (KEYVAULT_SYNC_REQUIRED=false)." >&2
+  echo "INFO: skipping optional rollout gate for $KEYVAULT_SYNC_DEPLOYMENT_NAME (KEYVAULT_SYNC_REQUIRED=false)." >&2
 fi

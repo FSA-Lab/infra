@@ -24,7 +24,7 @@ ingress-nginx:
 YAML
 fi
 
-HELM_ARGS=(upgrade --install cicd-platform "$CHART_PATH" -n "$NAMESPACE" --create-namespace)
+HELM_ARGS=(upgrade --install cicd-platform "$CHART_PATH" -n "$NAMESPACE" --create-namespace --wait --timeout 10m)
 
 if [ -n "$VALUES_FILE" ]; then
   HELM_ARGS+=( -f "$VALUES_FILE" )
