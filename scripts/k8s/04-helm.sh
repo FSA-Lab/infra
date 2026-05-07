@@ -59,8 +59,14 @@ YAML
 fi
 
 if ! helm status "$RELEASE_NAME" -n "$NAMESPACE" >/dev/null 2>&1; then
-  cleanup_orphaned_resource service "$POSTGRESQL_RESOURCE_NAME" || exit 1
-  cleanup_orphaned_resource statefulset "$POSTGRESQL_RESOURCE_NAME" || exit 1
+  if ! cleanup_orphaned_resource service "$POSTGRESQL_RESOURCE_NAME"; then
+    echo "ERROR: failed to cleanup orphaned service/$POSTGRESQL_RESOURCE_NAME." >&2
+    exit 1
+  fi
+  if ! cleanup_orphaned_resource statefulset "$POSTGRESQL_RESOURCE_NAME"; then
+    echo "ERROR: failed to cleanup orphaned statefulset/$POSTGRESQL_RESOURCE_NAME." >&2
+    exit 1
+  fi
 fi
 
 HELM_ARGS=(upgrade --install "$RELEASE_NAME" "$CHART_PATH" -n "$NAMESPACE" --create-namespace --wait --timeout 10m)
