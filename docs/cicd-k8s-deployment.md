@@ -43,8 +43,8 @@ Update these placeholders before production deployment:
 
 - `azure.workload.identity/client-id`
 - Key Vault name and tenant in `keyvault-secrets.yaml`
-- buildkit registry targets (`replace.azurecr.io`)
+- buildkit registry targets (`your-registry.azurecr.io`)
 - all `change-me-now` credentials
 - all `REPLACE_WITH_STRONG_PASSWORD` tokens (fallback file)
-- Keycloak client details in Jenkins OIDC JCasC
+- Keycloak client details in Jenkins OIDC JCasC (cicd realm)
 - Key Vault secret `keycloak-postgresql-password` when using Key Vault sync

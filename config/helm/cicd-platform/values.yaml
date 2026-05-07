@@ -32,7 +32,7 @@ jenkins:
     installPlugins:
       - kubernetes:4296.v20a_7e4d77cf6
       - configuration-as-code:1810.v9b_c30a_249a_4c
-      - oic-auth:4.420.v0475fd2a_b_4f4
+      - oic-auth
       - sonar:2.17.2
       - workflow-aggregator:596.v8c21c963d92d
     JCasC:
@@ -68,7 +68,7 @@ jenkins:
               oic:
                 clientId: "replace-with-keycloak-client-id"
                 clientSecret: "replace-with-keycloak-client-secret"
-                wellKnownOpenIDConfigurationUrl: "https://keycloak.cicd.local/realms/master/.well-known/openid-configuration"
+                wellKnownOpenIDConfigurationUrl: "https://keycloak.cicd.local/realms/cicd/.well-known/openid-configuration"
                 userNameField: "preferred_username"
                 fullNameFieldName: "name"
                 emailFieldName: "email"

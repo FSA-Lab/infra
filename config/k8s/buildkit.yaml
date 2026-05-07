@@ -11,7 +11,7 @@ data:
     [registry."ghcr.io"]
       http = false
       insecure = false
-    [registry."replace.azurecr.io"]
+    [registry."your-registry.azurecr.io"]
       http = false
       insecure = false
 ---
