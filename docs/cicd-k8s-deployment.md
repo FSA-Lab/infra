@@ -57,9 +57,7 @@ Optional flags:
 
 ## Key Vault Sync Prerequisite
 
-`config/k8s/keyvault-secrets.yaml` requires the Secrets Store CSI CRD:
-
-- `secretproviderclasses.secrets-store.csi.x-k8s.io`
+`config/k8s/keyvault-secrets.yaml` requires the SecretProviderClass CRD from Secrets Store CSI Driver.
 
 Behavior in `02-secrets.sh`:
 

@@ -18,7 +18,7 @@ if kubectl get crd secretproviderclasses.secrets-store.csi.x-k8s.io >/dev/null 2
   kubectl apply -f "$ROOT_DIR/config/k8s/keyvault-secrets.yaml"
 else
   if [ "$KEYVAULT_SYNC_REQUIRED" = "true" ]; then
-    echo "ERROR: secretproviderclasses.secrets-store.csi.x-k8s.io CRD is missing and KEYVAULT_SYNC_REQUIRED=true." >&2
+    echo "ERROR: SecretProviderClass CRD is missing and KEYVAULT_SYNC_REQUIRED=true." >&2
     echo "Install Secrets Store CSI Driver + Azure provider before deploying Key Vault sync resources." >&2
     exit 1
   fi
