@@ -25,8 +25,8 @@ cleanup_orphaned_resource() {
     return 0
   fi
 
-  owner_release=$(kubectl -n "$NAMESPACE" get "$kind" "$name" -o jsonpath="{.metadata.annotations['meta.helm.sh/release-name']}" 2>/dev/null || true)
-  owner_namespace=$(kubectl -n "$NAMESPACE" get "$kind" "$name" -o jsonpath="{.metadata.annotations['meta.helm.sh/release-namespace']}" 2>/dev/null || true)
+  owner_release=$(kubectl -n "$NAMESPACE" get "$kind" "$name" -o jsonpath="{.metadata.annotations[\"meta.helm.sh/release-name\"]}" 2>/dev/null || true)
+  owner_namespace=$(kubectl -n "$NAMESPACE" get "$kind" "$name" -o jsonpath="{.metadata.annotations[\"meta.helm.sh/release-namespace\"]}" 2>/dev/null || true)
 
   if [ -n "$owner_release" ]; then
     if [ "$owner_release" != "$RELEASE_NAME" ]; then
@@ -59,8 +59,8 @@ YAML
 fi
 
 if ! helm status "$RELEASE_NAME" -n "$NAMESPACE" >/dev/null 2>&1; then
-  cleanup_orphaned_resource service "$POSTGRESQL_RESOURCE_NAME"
-  cleanup_orphaned_resource statefulset "$POSTGRESQL_RESOURCE_NAME"
+  cleanup_orphaned_resource service "$POSTGRESQL_RESOURCE_NAME" || exit 1
+  cleanup_orphaned_resource statefulset "$POSTGRESQL_RESOURCE_NAME" || exit 1
 fi
 
 HELM_ARGS=(upgrade --install "$RELEASE_NAME" "$CHART_PATH" -n "$NAMESPACE" --create-namespace --wait --timeout 10m)
