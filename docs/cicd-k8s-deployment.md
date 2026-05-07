@@ -51,6 +51,7 @@ Optional flags:
 - `USE_FALLBACK_SECRETS=true` to apply seeded fallback secrets
 - `VALUES_FILE=/path/to/override-values.yaml` for chart overrides
 - `RELEASE_NAME` to override Helm release name (default `cicd-platform`)
+- `POSTGRESQL_RESOURCE_NAME` to override orphan cleanup target for Keycloak PostgreSQL resources (default `${RELEASE_NAME}-postgresql`)
 - `AKS_NAME` and `AKS_RESOURCE_GROUP_NAME` (or Terraform `TF_VAR_*`) to refresh kubeconfig from AKS before deploy
 - `KEYVAULT_SYNC_REQUIRED=true` to fail deployment if keyvault-secret-sync does not become ready
 - `STRICT_PLACEHOLDER_CHECK=true` to fail if Key Vault manifest placeholders are still present

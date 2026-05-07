@@ -5,6 +5,7 @@ ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 NAMESPACE=${NAMESPACE:-cicd}
 CHART_PATH="$ROOT_DIR/config/helm/cicd-platform"
 RELEASE_NAME=${RELEASE_NAME:-cicd-platform}
+POSTGRESQL_RESOURCE_NAME=${POSTGRESQL_RESOURCE_NAME:-${RELEASE_NAME}-postgresql}
 VALUES_FILE=${VALUES_FILE:-}
 AKS_RESOURCE_GROUP_NAME=${AKS_RESOURCE_GROUP_NAME:-}
 EXTRA_VALUES_FILE=""
@@ -26,8 +27,8 @@ YAML
 fi
 
 if ! helm status "$RELEASE_NAME" -n "$NAMESPACE" >/dev/null 2>&1; then
-  kubectl -n "$NAMESPACE" delete service "${RELEASE_NAME}-postgresql" --ignore-not-found
-  kubectl -n "$NAMESPACE" delete statefulset "${RELEASE_NAME}-postgresql" --ignore-not-found
+  kubectl -n "$NAMESPACE" delete service "$POSTGRESQL_RESOURCE_NAME" --ignore-not-found
+  kubectl -n "$NAMESPACE" delete statefulset "$POSTGRESQL_RESOURCE_NAME" --ignore-not-found
 fi
 
 HELM_ARGS=(upgrade --install "$RELEASE_NAME" "$CHART_PATH" -n "$NAMESPACE" --create-namespace --wait --timeout 10m)
