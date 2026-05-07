@@ -161,11 +161,10 @@ resource "azurerm_monitor_diagnostic_setting" "function_app" {
     }
   }
 
-  dynamic "metric" {
-    for_each = data.azurerm_monitor_diagnostic_categories.function_app.metrics
+  dynamic "enabled_metric" {
+    for_each = data.azurerm_monitor_diagnostic_categories.storage.metrics
     content {
-      category = metric.value
-      enabled  = true
+      category = enabled_metric.value
     }
   }
 
@@ -193,11 +192,10 @@ resource "azurerm_monitor_diagnostic_setting" "storage" {
     }
   }
 
-  dynamic "metric" {
+  dynamic "enabled_metric" {
     for_each = data.azurerm_monitor_diagnostic_categories.storage.metrics
     content {
-      category = metric.value
-      enabled  = true
+      category = enabled_metric.value
     }
   }
 
@@ -225,11 +223,10 @@ resource "azurerm_monitor_diagnostic_setting" "servicebus" {
     }
   }
 
-  dynamic "metric" {
-    for_each = data.azurerm_monitor_diagnostic_categories.servicebus.metrics
+  dynamic "enabled_metric" {
+    for_each = data.azurerm_monitor_diagnostic_categories.storage.metrics
     content {
-      category = metric.value
-      enabled  = true
+      category = enabled_metric.value
     }
   }
 
@@ -257,11 +254,10 @@ resource "azurerm_monitor_diagnostic_setting" "postgres" {
     }
   }
 
-  dynamic "metric" {
-    for_each = data.azurerm_monitor_diagnostic_categories.postgres.metrics
+  dynamic "enabled_metric" {
+    for_each = data.azurerm_monitor_diagnostic_categories.storage.metrics
     content {
-      category = metric.value
-      enabled  = true
+      category = enabled_metric.value
     }
   }
 
