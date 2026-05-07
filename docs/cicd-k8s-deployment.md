@@ -45,4 +45,6 @@ Update these placeholders before production deployment:
 - Key Vault name and tenant in `keyvault-secrets.yaml`
 - buildkit registry targets (`replace.azurecr.io`)
 - all `change-me-now` credentials
+- all `REPLACE_WITH_STRONG_PASSWORD` tokens (fallback file)
 - Keycloak client details in Jenkins OIDC JCasC
+- Key Vault secret `keycloak-postgresql-password` when using Key Vault sync

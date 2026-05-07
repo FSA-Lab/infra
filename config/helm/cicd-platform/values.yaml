@@ -73,7 +73,7 @@ jenkins:
                 fullNameFieldName: "name"
                 emailFieldName: "email"
                 groupsFieldName: "groups"
-                disableSslVerification: true
+                disableSslVerification: false
             authorizationStrategy:
               loggedInUsersCanDoAnything:
                 allowAnonymousRead: false
@@ -119,7 +119,6 @@ keycloak:
   postgresql:
     enabled: true
     auth:
-      postgresPassword: change-me-now
       username: keycloak
-      password: change-me-now
       database: keycloak
+      existingSecret: keycloak-postgresql
