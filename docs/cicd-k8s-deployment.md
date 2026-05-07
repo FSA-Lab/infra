@@ -55,6 +55,19 @@ Optional flags:
 - `STRICT_PLACEHOLDER_CHECK=true` to fail if Key Vault manifest placeholders are still present
 - `BUILDKIT_DEPLOYMENT_NAME`, `TRIVY_DEPLOYMENT_NAME`, `KEYVAULT_SYNC_DEPLOYMENT_NAME` to override rollout target names
 
+## Key Vault Sync Prerequisite
+
+`config/k8s/keyvault-secrets.yaml` requires the Secrets Store CSI CRD:
+
+- `secretproviderclasses.secrets-store.csi.x-k8s.io`
+
+Behavior in `02-secrets.sh`:
+
+- If CRD exists, Key Vault sync resources are applied.
+- If CRD is missing and `KEYVAULT_SYNC_REQUIRED=true`, deployment fails fast.
+- If CRD is missing and `KEYVAULT_SYNC_REQUIRED=false`, Key Vault sync apply is skipped with warning.
+- Set `USE_FALLBACK_SECRETS=true` to continue with seeded fallback secrets when Key Vault sync is unavailable.
+
 ## Required Secret Inputs
 
 Update all placeholder patterns before production deployment:
