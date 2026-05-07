@@ -52,6 +52,7 @@ Optional flags:
 - `VALUES_FILE=/path/to/override-values.yaml` for chart overrides
 - `AKS_NAME` and `AKS_RESOURCE_GROUP_NAME` (or Terraform `TF_VAR_*`) to refresh kubeconfig from AKS before deploy
 - `KEYVAULT_SYNC_REQUIRED=true` to fail deployment if keyvault-secret-sync does not become ready
+- `STRICT_PLACEHOLDER_CHECK=true` to fail if Key Vault manifest placeholders are still present
 - `BUILDKIT_DEPLOYMENT_NAME`, `TRIVY_DEPLOYMENT_NAME`, `KEYVAULT_SYNC_DEPLOYMENT_NAME` to override rollout target names
 
 ## Required Secret Inputs
