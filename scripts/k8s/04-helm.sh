@@ -10,6 +10,27 @@ VALUES_FILE=${VALUES_FILE:-}
 AKS_RESOURCE_GROUP_NAME=${AKS_RESOURCE_GROUP_NAME:-}
 EXTRA_VALUES_FILE=""
 
+cleanup_orphaned_resource() {
+  local kind=$1
+  local name=$2
+  local owner_release=""
+  local owner_namespace=""
+
+  if ! kubectl -n "$NAMESPACE" get "$kind" "$name" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  owner_release=$(kubectl -n "$NAMESPACE" get "$kind" "$name" -o jsonpath='{.metadata.annotations.meta\.helm\.sh/release-name}' 2>/dev/null || true)
+  owner_namespace=$(kubectl -n "$NAMESPACE" get "$kind" "$name" -o jsonpath='{.metadata.annotations.meta\.helm\.sh/release-namespace}' 2>/dev/null || true)
+
+  if [ -n "$owner_release" ] && { [ "$owner_release" != "$RELEASE_NAME" ] || [ "$owner_namespace" != "$NAMESPACE" ]; }; then
+    echo "WARN: skipping cleanup for $kind/$name managed by Helm release $owner_release in namespace $owner_namespace." >&2
+    return 0
+  fi
+
+  kubectl -n "$NAMESPACE" delete "$kind" "$name" --ignore-not-found
+}
+
 helm dependency update "$CHART_PATH"
 
 if [ -n "$AKS_RESOURCE_GROUP_NAME" ]; then
@@ -27,8 +48,8 @@ YAML
 fi
 
 if ! helm status "$RELEASE_NAME" -n "$NAMESPACE" >/dev/null 2>&1; then
-  kubectl -n "$NAMESPACE" delete service "$POSTGRESQL_RESOURCE_NAME" --ignore-not-found
-  kubectl -n "$NAMESPACE" delete statefulset "$POSTGRESQL_RESOURCE_NAME" --ignore-not-found
+  cleanup_orphaned_resource service "$POSTGRESQL_RESOURCE_NAME"
+  cleanup_orphaned_resource statefulset "$POSTGRESQL_RESOURCE_NAME"
 fi
 
 HELM_ARGS=(upgrade --install "$RELEASE_NAME" "$CHART_PATH" -n "$NAMESPACE" --create-namespace --wait --timeout 10m)
