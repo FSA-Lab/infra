@@ -76,6 +76,10 @@ resource "azurerm_postgresql_flexible_server" "this" {
   public_network_access_enabled = var.FUNCTIONS_POSTGRES_PUBLIC_NETWORK_ACCESS_ENABLED
 
   tags = var.FUNCTIONS_TAGS
+
+  lifecycle {
+    ignore_changes = [zone]
+  }
 }
 
 resource "azurerm_postgresql_flexible_server_database" "this" {
