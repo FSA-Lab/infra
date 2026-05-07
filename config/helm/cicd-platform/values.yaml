@@ -68,7 +68,7 @@ jenkins:
               oic:
                 clientId: "replace-with-keycloak-client-id"
                 clientSecret: "replace-with-keycloak-client-secret"
-                wellKnownOpenIDConfigurationUrl: "https://keycloak.{{ .Values.global.domain }}/realms/master/.well-known/openid-configuration"
+                wellKnownOpenIDConfigurationUrl: "https://keycloak.cicd.local/realms/master/.well-known/openid-configuration"
                 userNameField: "preferred_username"
                 fullNameFieldName: "name"
                 emailFieldName: "email"
@@ -110,6 +110,7 @@ keycloak:
       value: tools
       effect: NoSchedule
   auth:
+    adminUser: admin
     existingSecret: keycloak-admin
     passwordSecretKey: admin-password
   ingress:
