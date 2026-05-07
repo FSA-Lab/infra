@@ -5,13 +5,14 @@ ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 NAMESPACE=${NAMESPACE:-cicd}
 CHART_PATH="$ROOT_DIR/config/helm/cicd-platform"
 VALUES_FILE=${VALUES_FILE:-}
-AKS_RESOURCE_GROUP_NAME=${AKS_RESOURCE_GROUP_NAME:-${TF_VAR_AKS_RESOURCE_GROUP_NAME:-}}
+AKS_RESOURCE_GROUP_NAME=${AKS_RESOURCE_GROUP_NAME:-}
 EXTRA_VALUES_FILE=""
 
 helm dependency update "$CHART_PATH"
 
 if [ -n "$AKS_RESOURCE_GROUP_NAME" ]; then
-  EXTRA_VALUES_FILE=$(mktemp /tmp/cicd-platform-aks-overrides.XXXXXX.yaml)
+  umask 077
+  EXTRA_VALUES_FILE=$(mktemp --tmpdir cicd-platform-aks-overrides.XXXXXX.yaml)
   trap 'rm -f "$EXTRA_VALUES_FILE"' EXIT
   cat > "$EXTRA_VALUES_FILE" <<YAML
 ingress-nginx:
