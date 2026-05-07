@@ -13,6 +13,7 @@ EXTRA_VALUES_FILE=""
 cleanup_orphaned_resource() {
   local kind=$1
   local name=$2
+  local owner_info=""
   local owner_release=""
   local owner_namespace=""
 
@@ -20,12 +21,17 @@ cleanup_orphaned_resource() {
     return 0
   fi
 
-  owner_release=$(kubectl -n "$NAMESPACE" get "$kind" "$name" -o jsonpath='{.metadata.annotations.meta\.helm\.sh/release-name}' 2>/dev/null || true)
-  owner_namespace=$(kubectl -n "$NAMESPACE" get "$kind" "$name" -o jsonpath='{.metadata.annotations.meta\.helm\.sh/release-namespace}' 2>/dev/null || true)
+  owner_info=$(kubectl -n "$NAMESPACE" get "$kind" "$name" -o jsonpath='{.metadata.annotations.meta\.helm\.sh/release-name}{"|"}{.metadata.annotations.meta\.helm\.sh/release-namespace}' 2>/dev/null || true)
+  owner_release=${owner_info%%|*}
+  owner_namespace=${owner_info#*|}
 
   if [ -n "$owner_release" ]; then
-    if [ "$owner_release" != "$RELEASE_NAME" ] || { [ -n "$owner_namespace" ] && [ "$owner_namespace" != "$NAMESPACE" ]; }; then
-      echo "WARN: skipping cleanup for $kind/$name managed by Helm release $owner_release in namespace ${owner_namespace:-<unset>}." >&2
+    if [ "$owner_release" != "$RELEASE_NAME" ]; then
+      echo "WARN: skipping cleanup for $kind/$name managed by Helm release $owner_release." >&2
+      return 0
+    fi
+    if [ -n "$owner_namespace" ] && [ "$owner_namespace" != "$NAMESPACE" ]; then
+      echo "WARN: skipping cleanup for $kind/$name managed by Helm release $owner_release in namespace $owner_namespace." >&2
       return 0
     fi
   fi
