@@ -97,7 +97,6 @@ sonarqube:
       - name: sonarqube.cicd.local
         path: /
   account:
-    adminPassword: change-me-now
     existingSecret: sonarqube-admin
     existingSecretKey: password
 
