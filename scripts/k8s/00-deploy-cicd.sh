@@ -19,4 +19,6 @@ bash "$ROOT_DIR/scripts/k8s/04-helm.sh"
 
 kubectl -n "$NAMESPACE" rollout status deploy/buildkitd --timeout=180s
 kubectl -n "$NAMESPACE" rollout status deploy/trivy --timeout=180s
-kubectl -n "$NAMESPACE" rollout status deploy/keyvault-secret-sync --timeout=180s || true
+if ! kubectl -n "$NAMESPACE" rollout status deploy/keyvault-secret-sync --timeout=180s; then
+  echo "WARN: keyvault-secret-sync rollout did not complete. Check SecretProviderClass and AKS workload identity settings." >&2
+fi
