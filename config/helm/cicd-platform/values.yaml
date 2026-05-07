@@ -1,0 +1,125 @@
+global:
+  domain: cicd.local
+
+ingress-nginx:
+  controller:
+    nodeSelector:
+      workload: tools
+    tolerations:
+      - key: workload
+        operator: Equal
+        value: tools
+        effect: NoSchedule
+    service:
+      annotations:
+        service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: /healthz
+        service.beta.kubernetes.io/azure-load-balancer-resource-group: ""
+      externalTrafficPolicy: Local
+
+jenkins:
+  controller:
+    nodeSelector:
+      workload: tools
+    tolerations:
+      - key: workload
+        operator: Equal
+        value: tools
+        effect: NoSchedule
+    admin:
+      existingSecret: jenkins-admin
+      userKey: jenkins-admin-user
+      passwordKey: jenkins-admin-password
+    installPlugins:
+      - kubernetes:4296.v20a_7e4d77cf6
+      - configuration-as-code:1810.v9b_c30a_249a_4c
+      - oic-auth:4.420.v0475fd2a_b_4f4
+      - sonar:2.17.2
+      - workflow-aggregator:596.v8c21c963d92d
+    JCasC:
+      defaultConfig: true
+      configScripts:
+        oidc-and-build-agents: |
+          jenkins:
+            clouds:
+              - kubernetes:
+                  name: "kubernetes"
+                  namespace: "cicd"
+                  jenkinsUrl: "http://jenkins.cicd.svc.cluster.local:8080"
+                  templates:
+                    - name: "cicd-agent"
+                      label: "cicd-agent"
+                      nodeUsageMode: NORMAL
+                      containers:
+                        - name: "jnlp"
+                          image: "jenkins/inbound-agent:latest"
+                        - name: "azure-cli"
+                          image: "mcr.microsoft.com/azure-cli:2.62.0"
+                          command: "cat"
+                          ttyEnabled: true
+                        - name: "buildctl"
+                          image: "moby/buildkit:v0.16.0"
+                          command: "cat"
+                          ttyEnabled: true
+                        - name: "trivy"
+                          image: "aquasec/trivy:0.51.2"
+                          command: "cat"
+                          ttyEnabled: true
+            securityRealm:
+              oic:
+                clientId: "replace-with-keycloak-client-id"
+                clientSecret: "replace-with-keycloak-client-secret"
+                wellKnownOpenIDConfigurationUrl: "https://keycloak.{{ .Values.global.domain }}/realms/master/.well-known/openid-configuration"
+                userNameField: "preferred_username"
+                fullNameFieldName: "name"
+                emailFieldName: "email"
+                groupsFieldName: "groups"
+                disableSslVerification: true
+            authorizationStrategy:
+              loggedInUsersCanDoAnything:
+                allowAnonymousRead: false
+    ingress:
+      enabled: true
+      hostName: jenkins.cicd.local
+      ingressClassName: nginx
+
+sonarqube:
+  nodeSelector:
+    workload: tools
+  tolerations:
+    - key: workload
+      operator: Equal
+      value: tools
+      effect: NoSchedule
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - name: sonarqube.cicd.local
+        path: /
+  account:
+    adminPassword: change-me-now
+    existingSecret: sonarqube-admin
+    existingSecretKey: password
+
+keycloak:
+  nodeSelector:
+    workload: tools
+  tolerations:
+    - key: workload
+      operator: Equal
+      value: tools
+      effect: NoSchedule
+  auth:
+    existingSecret: keycloak-admin
+    passwordSecretKey: admin-password
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hostname: keycloak.cicd.local
+  postgresql:
+    enabled: true
+    auth:
+      postgresPassword: change-me-now
+      username: keycloak
+      password: change-me-now
+      database: keycloak

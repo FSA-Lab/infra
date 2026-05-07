@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cicd-secrets-sa
+  namespace: cicd
+  annotations:
+    azure.workload.identity/client-id: "00000000-0000-0000-0000-000000000000"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: buildkit
+  namespace: cicd
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: trivy
+  namespace: cicd

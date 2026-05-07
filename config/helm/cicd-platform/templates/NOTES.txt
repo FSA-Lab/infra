@@ -1,0 +1,3 @@
+1. Ensure namespace and manifests in config/k8s are applied first.
+2. Validate DNS records for jenkins.cicd.local, sonarqube.cicd.local, and keycloak.cicd.local.
+3. Replace demo credentials with Key Vault-backed secrets before production use.
