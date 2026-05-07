@@ -4,7 +4,7 @@ metadata:
   name: cicd-secrets-sa
   namespace: cicd
   annotations:
-    azure.workload.identity/client-id: "00000000-0000-0000-0000-000000000000"
+    azure.workload.identity/client-id: "REPLACE-WITH-YOUR-CLIENT-ID"
 ---
 apiVersion: v1
 kind: ServiceAccount

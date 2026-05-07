@@ -29,6 +29,17 @@ jenkins:
       existingSecret: jenkins-admin
       userKey: jenkins-admin-user
       passwordKey: jenkins-admin-password
+    containerEnv:
+      - name: KEYCLOAK_CLIENT_ID
+        valueFrom:
+          secretKeyRef:
+            name: jenkins-oidc
+            key: client-id
+      - name: KEYCLOAK_CLIENT_SECRET
+        valueFrom:
+          secretKeyRef:
+            name: jenkins-oidc
+            key: client-secret
     installPlugins:
       - kubernetes:4296.v20a_7e4d77cf6
       - configuration-as-code:1810.v9b_c30a_249a_4c
@@ -66,8 +77,8 @@ jenkins:
                           ttyEnabled: true
             securityRealm:
               oic:
-                clientId: "replace-with-keycloak-client-id"
-                clientSecret: "replace-with-keycloak-client-secret"
+                clientId: "${KEYCLOAK_CLIENT_ID}"
+                clientSecret: "${KEYCLOAK_CLIENT_SECRET}"
                 wellKnownOpenIDConfigurationUrl: "https://keycloak.cicd.local/realms/cicd/.well-known/openid-configuration"
                 userNameField: "preferred_username"
                 fullNameFieldName: "name"
