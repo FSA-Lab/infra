@@ -57,7 +57,7 @@ Optional flags:
 - `STRICT_PLACEHOLDER_CHECK=true` to fail if Key Vault manifest placeholders are still present
 - `BUILDKIT_DEPLOYMENT_NAME`, `TRIVY_DEPLOYMENT_NAME`, `KEYVAULT_SYNC_DEPLOYMENT_NAME` to override rollout target names
 
-`04-helm.sh` also performs a preflight cleanup for orphaned `*-postgresql` Service and StatefulSet when Helm release metadata is missing, while skipping resources owned by a different Helm release.
+`04-helm.sh` also performs a preflight cleanup for orphaned Service and StatefulSet named by `POSTGRESQL_RESOURCE_NAME` (default `${RELEASE_NAME}-postgresql`) when Helm release metadata is missing, while skipping resources owned by a different Helm release.
 
 ## Key Vault Sync Prerequisite
 

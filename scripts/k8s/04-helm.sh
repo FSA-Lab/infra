@@ -23,9 +23,13 @@ cleanup_orphaned_resource() {
   owner_release=$(kubectl -n "$NAMESPACE" get "$kind" "$name" -o jsonpath='{.metadata.annotations.meta\.helm\.sh/release-name}' 2>/dev/null || true)
   owner_namespace=$(kubectl -n "$NAMESPACE" get "$kind" "$name" -o jsonpath='{.metadata.annotations.meta\.helm\.sh/release-namespace}' 2>/dev/null || true)
 
-  if [ -n "$owner_release" ] && { [ "$owner_release" != "$RELEASE_NAME" ] || [ "$owner_namespace" != "$NAMESPACE" ]; }; then
-    echo "WARN: skipping cleanup for $kind/$name managed by Helm release $owner_release in namespace $owner_namespace." >&2
-    return 0
+  if [ -n "$owner_release" ]; then
+    if [ "$owner_release" = "$RELEASE_NAME" ] && { [ -z "$owner_namespace" ] || [ "$owner_namespace" = "$NAMESPACE" ]; }; then
+      :
+    else
+      echo "WARN: skipping cleanup for $kind/$name managed by Helm release $owner_release in namespace $owner_namespace." >&2
+      return 0
+    fi
   fi
 
   kubectl -n "$NAMESPACE" delete "$kind" "$name" --ignore-not-found
