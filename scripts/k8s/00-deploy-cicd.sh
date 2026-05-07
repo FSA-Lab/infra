@@ -27,6 +27,6 @@ kubectl -n "$NAMESPACE" rollout status "deploy/$TRIVY_DEPLOYMENT_NAME" --timeout
 
 if [ "$KEYVAULT_SYNC_REQUIRED" = "true" ]; then
   kubectl -n "$NAMESPACE" rollout status "deploy/$KEYVAULT_SYNC_DEPLOYMENT_NAME" --timeout=180s
-elif ! kubectl -n "$NAMESPACE" rollout status "deploy/$KEYVAULT_SYNC_DEPLOYMENT_NAME" --timeout=180s; then
-  echo "WARN: $KEYVAULT_SYNC_DEPLOYMENT_NAME rollout did not complete. Check SecretProviderClass and AKS workload identity settings." >&2
+else
+  echo "INFO: skipping required rollout gate for $KEYVAULT_SYNC_DEPLOYMENT_NAME (KEYVAULT_SYNC_REQUIRED=false)." >&2
 fi

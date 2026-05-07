@@ -13,7 +13,7 @@ helm dependency update "$CHART_PATH"
 if [ -n "$AKS_RESOURCE_GROUP_NAME" ]; then
   umask 077
   TMP_BASE="${TMPDIR:-/tmp}"
-  EXTRA_VALUES_FILE=$(mktemp "${TMP_BASE%/}/helm-values.XXXXXXXXXX")
+  EXTRA_VALUES_FILE=$(mktemp "${TMP_BASE}/helm-values.XXXXXXXXXX")
   trap 'rm -f "$EXTRA_VALUES_FILE"' EXIT
   cat > "$EXTRA_VALUES_FILE" <<YAML
 ingress-nginx:
