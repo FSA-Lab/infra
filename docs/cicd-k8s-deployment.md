@@ -56,8 +56,18 @@ Optional flags:
 - `KEYVAULT_SYNC_REQUIRED=true` to fail deployment if keyvault-secret-sync does not become ready
 - `STRICT_PLACEHOLDER_CHECK=true` to fail if Key Vault manifest placeholders are still present
 - `BUILDKIT_DEPLOYMENT_NAME`, `TRIVY_DEPLOYMENT_NAME`, `KEYVAULT_SYNC_DEPLOYMENT_NAME` to override rollout target names
+- `KEYVAULT_NAME` (or `AZURE_KEYVAULT_NAME`) so `04-helm.sh` can read/write persistent Keycloak PostgreSQL credentials
+- `KEYCLOAK_POSTGRESQL_PASSWORD` and `KEYCLOAK_POSTGRESQL_ADMIN_PASSWORD` to provide persistent credentials from CI secret storage when cluster secret sync is unavailable
 
 `04-helm.sh` also performs a preflight cleanup for orphaned Service and StatefulSet named by `POSTGRESQL_RESOURCE_NAME` (default `${RELEASE_NAME}-postgresql`) when Helm release metadata is missing, while skipping resources owned by a different Helm release.
+
+`04-helm.sh` now enforces durable Keycloak PostgreSQL credentials before Helm upgrade:
+
+- Reads existing values from `secret/keycloak-postgresql` when present.
+- Falls back to `KEYCLOAK_POSTGRESQL_PASSWORD` and `KEYCLOAK_POSTGRESQL_ADMIN_PASSWORD`.
+- Falls back to Azure Key Vault secrets when `KEYVAULT_NAME` (or `AZURE_KEYVAULT_NAME`) is set.
+- Upserts `secret/keycloak-postgresql` before Helm upgrade.
+- Attempts to persist missing Key Vault secrets from resolved values (best-effort).
 
 ## Key Vault Sync Prerequisite
 

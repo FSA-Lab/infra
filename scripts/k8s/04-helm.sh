@@ -14,6 +14,11 @@ TMP_BASE=${TMPDIR:-/tmp}
 EXTRA_VALUES_FILE=""
 POSTGRESQL_PASSWORD=""
 POSTGRESQL_ADMIN_PASSWORD=""
+REMOTE_POSTGRESQL_PASSWORD=${KEYCLOAK_POSTGRESQL_PASSWORD:-}
+REMOTE_POSTGRESQL_ADMIN_PASSWORD=${KEYCLOAK_POSTGRESQL_ADMIN_PASSWORD:-}
+KEYVAULT_NAME=${KEYVAULT_NAME:-${AZURE_KEYVAULT_NAME:-}}
+KEYVAULT_POSTGRESQL_PASSWORD_SECRET_NAME=${KEYVAULT_POSTGRESQL_PASSWORD_SECRET_NAME:-keycloak-postgresql-password}
+KEYVAULT_POSTGRESQL_ADMIN_PASSWORD_SECRET_NAME=${KEYVAULT_POSTGRESQL_ADMIN_PASSWORD_SECRET_NAME:-$KEYVAULT_POSTGRESQL_PASSWORD_SECRET_NAME}
 POSTGRESQL_PASSWORD_FILE=""
 POSTGRESQL_ADMIN_PASSWORD_FILE=""
 
@@ -123,6 +128,59 @@ create_secret_value_file() {
   printf '%s' "$file_path"
 }
 
+get_keyvault_secret_value() {
+  local secret_name=${1:-}
+  local value=""
+
+  if [ -z "$secret_name" ] || [ -z "$KEYVAULT_NAME" ]; then
+    return 0
+  fi
+
+  if ! command -v az >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if ! value=$(az keyvault secret show --vault-name "$KEYVAULT_NAME" --name "$secret_name" --query value -o tsv 2>/dev/null); then
+    value=""
+  fi
+
+  printf '%s' "$value"
+}
+
+upsert_keyvault_secret_if_missing() {
+  local secret_name=${1:-}
+  local secret_value=${2:-}
+
+  if [ -z "$secret_name" ] || [ -z "$secret_value" ] || [ -z "$KEYVAULT_NAME" ]; then
+    return 0
+  fi
+
+  if ! command -v az >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if az keyvault secret show --vault-name "$KEYVAULT_NAME" --name "$secret_name" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if az keyvault secret set --vault-name "$KEYVAULT_NAME" --name "$secret_name" --value "$secret_value" >/dev/null 2>&1; then
+    echo "INFO: persisted missing secret '$secret_name' to Key Vault '$KEYVAULT_NAME'." >&2
+  else
+    echo "WARN: failed to persist secret '$secret_name' to Key Vault '$KEYVAULT_NAME'; continuing." >&2
+  fi
+}
+
+upsert_postgresql_secret() {
+  if [ -z "$POSTGRESQL_PASSWORD" ] || [ -z "$POSTGRESQL_ADMIN_PASSWORD" ]; then
+    return 1
+  fi
+
+  kubectl -n "$NAMESPACE" create secret generic "$POSTGRESQL_SECRET_NAME" \
+    --from-literal=password="$POSTGRESQL_PASSWORD" \
+    --from-literal=postgres-password="$POSTGRESQL_ADMIN_PASSWORD" \
+    --dry-run=client -o yaml | kubectl apply -f - >/dev/null
+}
+
 helm dependency update "$CHART_PATH"
 
 if [ -n "$AKS_RESOURCE_GROUP_NAME" ]; then
@@ -154,6 +212,44 @@ if kubectl -n "$NAMESPACE" get secret "$POSTGRESQL_SECRET_NAME" >/dev/null 2>&1;
   POSTGRESQL_PASSWORD=$(decode_base64 "password" "$secret_password_b64")
   POSTGRESQL_ADMIN_PASSWORD=$(decode_base64 "postgres-password" "$secret_postgres_password_b64")
 fi
+
+if [ -z "$POSTGRESQL_PASSWORD" ] && [ -n "$REMOTE_POSTGRESQL_PASSWORD" ]; then
+  POSTGRESQL_PASSWORD="$REMOTE_POSTGRESQL_PASSWORD"
+fi
+
+if [ -z "$POSTGRESQL_ADMIN_PASSWORD" ] && [ -n "$REMOTE_POSTGRESQL_ADMIN_PASSWORD" ]; then
+  POSTGRESQL_ADMIN_PASSWORD="$REMOTE_POSTGRESQL_ADMIN_PASSWORD"
+fi
+
+if [ -z "$POSTGRESQL_PASSWORD" ]; then
+  POSTGRESQL_PASSWORD=$(get_keyvault_secret_value "$KEYVAULT_POSTGRESQL_PASSWORD_SECRET_NAME")
+fi
+
+if [ -z "$POSTGRESQL_ADMIN_PASSWORD" ]; then
+  POSTGRESQL_ADMIN_PASSWORD=$(get_keyvault_secret_value "$KEYVAULT_POSTGRESQL_ADMIN_PASSWORD_SECRET_NAME")
+fi
+
+if [ -z "$POSTGRESQL_ADMIN_PASSWORD" ] && [ -n "$POSTGRESQL_PASSWORD" ]; then
+  POSTGRESQL_ADMIN_PASSWORD="$POSTGRESQL_PASSWORD"
+fi
+
+if [ -z "$POSTGRESQL_PASSWORD" ] && [ -n "$POSTGRESQL_ADMIN_PASSWORD" ]; then
+  POSTGRESQL_PASSWORD="$POSTGRESQL_ADMIN_PASSWORD"
+fi
+
+if [ -z "$POSTGRESQL_PASSWORD" ] || [ -z "$POSTGRESQL_ADMIN_PASSWORD" ]; then
+  echo "ERROR: persistent PostgreSQL credentials are required for Keycloak chart upgrades." >&2
+  echo "Provide one of: secret/$POSTGRESQL_SECRET_NAME in namespace '$NAMESPACE', Key Vault secrets via KEYVAULT_NAME, or CI secret env vars KEYCLOAK_POSTGRESQL_PASSWORD and KEYCLOAK_POSTGRESQL_ADMIN_PASSWORD." >&2
+  exit 1
+fi
+
+if ! upsert_postgresql_secret; then
+  echo "ERROR: failed to upsert secret/$POSTGRESQL_SECRET_NAME in namespace '$NAMESPACE'." >&2
+  exit 1
+fi
+
+upsert_keyvault_secret_if_missing "$KEYVAULT_POSTGRESQL_PASSWORD_SECRET_NAME" "$POSTGRESQL_PASSWORD"
+upsert_keyvault_secret_if_missing "$KEYVAULT_POSTGRESQL_ADMIN_PASSWORD_SECRET_NAME" "$POSTGRESQL_ADMIN_PASSWORD"
 
 if [ -n "$POSTGRESQL_PASSWORD" ] || [ -n "$POSTGRESQL_ADMIN_PASSWORD" ]; then
   if [ -n "$POSTGRESQL_PASSWORD" ]; then
