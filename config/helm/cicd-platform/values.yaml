@@ -131,18 +131,16 @@ sonarqube:
 
   postgresql:
     enabled: true
-    tls:
-      enabled: false
 
   ingress:
     enabled: true
     ingressClassName: nginx
 
     hosts:
-      - host: sonarqube.cicd.local
-        paths:
-          - path: /
-            pathType: Prefix
+      - sonarqube.cicd.local
+
+    path: /
+    pathType: Prefix
 
   account:
     existingSecret: sonarqube-admin
@@ -175,6 +173,3 @@ keycloak:
       username: keycloak
       database: keycloak
       existingSecret: keycloak-postgresql
-
-    tls:
-      enabled: false
