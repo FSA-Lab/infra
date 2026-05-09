@@ -31,9 +31,13 @@ import_from_apply_log() {
   local candidates
   local imported_any=false
   local import_error_count
+  local import_required_msg="already exists - to be managed via Terraform this resource needs to be imported into the State"
 
-  candidates=$(awk '
-    /resource with the ID "/ && /already exists - to be managed via Terraform this resource needs to be imported into the State/ {
+  # Parse Terraform -no-color errors in the form:
+  # 1) resource with the ID "<resource_id>" ... needs to be imported into the State
+  # 2) with <terraform_address>,
+  candidates=$(awk -v import_required_msg="$import_required_msg" '
+    /resource with the ID "/ && index($0, import_required_msg) > 0 {
       match($0, /"[^"]+"/)
       if (RSTART > 0) {
         pending_id = substr($0, RSTART + 1, RLENGTH - 2)
@@ -51,7 +55,7 @@ import_from_apply_log() {
   ' "$apply_log")
 
   if [ -z "$candidates" ]; then
-    import_error_count=$(grep -c "already exists - to be managed via Terraform this resource needs to be imported into the State" "$apply_log" || true)
+    import_error_count=$(grep -c "$import_required_msg" "$apply_log" || true)
     if [ "$import_error_count" -gt 0 ]; then
       echo "WARN: detected import-required errors but could not parse Terraform output format" >&2
     fi
@@ -78,7 +82,7 @@ import_from_apply_log() {
   [ "$imported_any" = true ]
 }
 
-while [ "$APPLY_ATTEMPT" -le "$MAX_APPLY_ATTEMPTS" ]; do
+for ((APPLY_ATTEMPT=1; APPLY_ATTEMPT<=MAX_APPLY_ATTEMPTS; APPLY_ATTEMPT++)); do
   ORIGINAL_UMASK=$(umask)
   umask 077
   APPLY_LOG=$(mktemp "${TMPDIR:-/tmp}/terraform-functions-apply-${APPLY_ATTEMPT}-XXXXXX.log")
@@ -99,7 +103,6 @@ while [ "$APPLY_ATTEMPT" -le "$MAX_APPLY_ATTEMPTS" ]; do
     exit "$APPLY_EXIT_CODE"
   fi
 
-  APPLY_ATTEMPT=$((APPLY_ATTEMPT + 1))
 done
 
 echo "ERROR: terraform apply failed after ${MAX_APPLY_ATTEMPTS} attempts" >&2
