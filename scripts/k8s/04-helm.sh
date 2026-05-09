@@ -80,12 +80,6 @@ get_secret_data_key() {
   printf '%s' "$value"
 }
 
-decode_secret_key() {
-  local key=${1:-value}
-  local value=${2:-}
-  decode_b64 "$key" "$value"
-}
-
 helm dependency update "$CHART_PATH"
 
 if [ -n "$AKS_RESOURCE_GROUP_NAME" ]; then
@@ -117,8 +111,8 @@ if kubectl -n "$NAMESPACE" get secret "$POSTGRESQL_SECRET_NAME" >/dev/null 2>&1;
   secret_password_b64=$(get_secret_data_key "password" "{.data.password}")
   secret_postgres_password_b64=$(get_secret_data_key "postgres-password" "{.data['postgres-password']}")
 
-  POSTGRESQL_PASSWORD=$(decode_secret_key "password" "$secret_password_b64")
-  POSTGRESQL_ADMIN_PASSWORD=$(decode_secret_key "postgres-password" "$secret_postgres_password_b64")
+  POSTGRESQL_PASSWORD=$(decode_b64 "password" "$secret_password_b64")
+  POSTGRESQL_ADMIN_PASSWORD=$(decode_b64 "postgres-password" "$secret_postgres_password_b64")
 fi
 
 HELM_ARGS=(upgrade --install "$RELEASE_NAME" "$CHART_PATH" -n "$NAMESPACE" --create-namespace --wait --timeout 10m)
