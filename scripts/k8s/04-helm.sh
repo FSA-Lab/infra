@@ -80,13 +80,26 @@ get_secret_data_key() {
   printf '%s' "$value"
 }
 
-helm dependency update "$CHART_PATH"
+ensure_extra_values_file() {
+  if [ -n "$EXTRA_VALUES_FILE" ]; then
+    return 0
+  fi
 
-if [ -n "$AKS_RESOURCE_GROUP_NAME" ]; then
   umask 077
   TMP_BASE="${TMPDIR:-/tmp}"
   EXTRA_VALUES_FILE=$(mktemp "${TMP_BASE}/helm-values.XXXXXXXXXX.yaml")
   trap 'rm -f "$EXTRA_VALUES_FILE"' EXIT
+}
+
+yaml_single_quote_escape() {
+  local value=${1:-}
+  printf '%s' "$value" | sed "s/'/''/g"
+}
+
+helm dependency update "$CHART_PATH"
+
+if [ -n "$AKS_RESOURCE_GROUP_NAME" ]; then
+  ensure_extra_values_file
   cat > "$EXTRA_VALUES_FILE" <<YAML
 ingress-nginx:
   controller:
@@ -115,6 +128,30 @@ if kubectl -n "$NAMESPACE" get secret "$POSTGRESQL_SECRET_NAME" >/dev/null 2>&1;
   POSTGRESQL_ADMIN_PASSWORD=$(decode_base64 "postgres-password" "$secret_postgres_password_b64")
 fi
 
+if [ -n "$POSTGRESQL_PASSWORD" ] || [ -n "$POSTGRESQL_ADMIN_PASSWORD" ]; then
+  ensure_extra_values_file
+  {
+    echo "global:"
+    echo "  postgresql:"
+    echo "    auth:"
+    if [ -n "$POSTGRESQL_PASSWORD" ]; then
+      echo "      password: '$(yaml_single_quote_escape "$POSTGRESQL_PASSWORD")'"
+    fi
+    if [ -n "$POSTGRESQL_ADMIN_PASSWORD" ]; then
+      echo "      postgresPassword: '$(yaml_single_quote_escape "$POSTGRESQL_ADMIN_PASSWORD")'"
+    fi
+    echo "keycloak:"
+    echo "  postgresql:"
+    echo "    auth:"
+    if [ -n "$POSTGRESQL_PASSWORD" ]; then
+      echo "      password: '$(yaml_single_quote_escape "$POSTGRESQL_PASSWORD")'"
+    fi
+    if [ -n "$POSTGRESQL_ADMIN_PASSWORD" ]; then
+      echo "      postgresPassword: '$(yaml_single_quote_escape "$POSTGRESQL_ADMIN_PASSWORD")'"
+    fi
+  } >> "$EXTRA_VALUES_FILE"
+fi
+
 HELM_ARGS=(upgrade --install "$RELEASE_NAME" "$CHART_PATH" -n "$NAMESPACE" --create-namespace --wait --timeout 10m)
 
 if [ -n "$VALUES_FILE" ]; then
@@ -123,16 +160,6 @@ fi
 
 if [ -n "$EXTRA_VALUES_FILE" ]; then
   HELM_ARGS+=( -f "$EXTRA_VALUES_FILE" )
-fi
-
-if [ -n "$POSTGRESQL_PASSWORD" ]; then
-  HELM_ARGS+=( --set-string "global.postgresql.auth.password=$POSTGRESQL_PASSWORD" )
-  HELM_ARGS+=( --set-string "keycloak.postgresql.auth.password=$POSTGRESQL_PASSWORD" )
-fi
-
-if [ -n "$POSTGRESQL_ADMIN_PASSWORD" ]; then
-  HELM_ARGS+=( --set-string "global.postgresql.auth.postgresPassword=$POSTGRESQL_ADMIN_PASSWORD" )
-  HELM_ARGS+=( --set-string "keycloak.postgresql.auth.postgresPassword=$POSTGRESQL_ADMIN_PASSWORD" )
 fi
 
 helm "${HELM_ARGS[@]}"
