@@ -11,6 +11,7 @@ POSTGRESQL_SECRET_NAME=${POSTGRESQL_SECRET_NAME:-keycloak-postgresql}
 VALUES_FILE=${VALUES_FILE:-}
 AKS_RESOURCE_GROUP_NAME=${AKS_RESOURCE_GROUP_NAME:-}
 TMP_BASE=${TMPDIR:-/tmp}
+ORPHAN_CLEANUP_WAIT_SECONDS=${ORPHAN_CLEANUP_WAIT_SECONDS:-60}
 EXTRA_VALUES_FILE=""
 POSTGRESQL_PASSWORD=""
 POSTGRESQL_ADMIN_PASSWORD=""
@@ -40,10 +41,15 @@ cleanup_orphaned_resource() {
   local name=$2
   local owner_release=""
   local owner_namespace=""
-  local wait_seconds=60
+  local wait_seconds="$ORPHAN_CLEANUP_WAIT_SECONDS"
 
   if [ -z "$kind" ] || [ -z "$name" ]; then
     echo "ERROR: cleanup_orphaned_resource requires kind and name." >&2
+    return 1
+  fi
+
+  if ! [[ "$wait_seconds" =~ ^[0-9]+$ ]] || [ "$wait_seconds" -le 0 ]; then
+    echo "ERROR: ORPHAN_CLEANUP_WAIT_SECONDS must be a positive integer; got '$wait_seconds'." >&2
     return 1
   fi
 
