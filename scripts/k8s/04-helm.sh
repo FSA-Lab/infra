@@ -46,12 +46,44 @@ cleanup_orphaned_resource() {
 }
 
 decode_b64() {
-  local value=${1:-}
+  local label=${1:-value}
+  local value=${2:-}
+  local decoded=""
+
   if [ -z "$value" ]; then
     return 0
   fi
 
-  printf '%s' "$value" | base64 --decode 2>/dev/null || true
+  if ! decoded=$(printf '%s' "$value" | base64 --decode 2>/dev/null); then
+    echo "WARN: failed to decode base64 for $label from secret/$POSTGRESQL_SECRET_NAME in namespace $NAMESPACE." >&2
+    return 0
+  fi
+
+  printf '%s' "$decoded"
+}
+
+get_secret_data_key() {
+  local key=${1:-}
+  local jsonpath=${2:-}
+  local value=""
+
+  if [ -z "$key" ] || [ -z "$jsonpath" ]; then
+    echo "ERROR: get_secret_data_key requires key and jsonpath." >&2
+    return 1
+  fi
+
+  if ! value=$(kubectl -n "$NAMESPACE" get secret "$POSTGRESQL_SECRET_NAME" -o jsonpath="$jsonpath" 2>/dev/null); then
+    echo "WARN: failed to read key '$key' from secret/$POSTGRESQL_SECRET_NAME in namespace $NAMESPACE." >&2
+    return 0
+  fi
+
+  printf '%s' "$value"
+}
+
+decode_secret_key() {
+  local value=${1:-}
+  local key=${2:-value}
+  decode_b64 "$key" "$value"
 }
 
 helm dependency update "$CHART_PATH"
@@ -82,8 +114,8 @@ if ! helm status "$RELEASE_NAME" -n "$NAMESPACE" >/dev/null 2>&1; then
 fi
 
 if kubectl -n "$NAMESPACE" get secret "$POSTGRESQL_SECRET_NAME" >/dev/null 2>&1; then
-  POSTGRESQL_PASSWORD=$(decode_b64 "$(kubectl -n "$NAMESPACE" get secret "$POSTGRESQL_SECRET_NAME" -o jsonpath="{.data.password}" 2>/dev/null || true)")
-  POSTGRESQL_ADMIN_PASSWORD=$(decode_b64 "$(kubectl -n "$NAMESPACE" get secret "$POSTGRESQL_SECRET_NAME" -o jsonpath="{.data['postgres-password']}" 2>/dev/null || true)")
+  POSTGRESQL_PASSWORD=$(decode_secret_key "$(get_secret_data_key "password" "{.data.password}")" "password")
+  POSTGRESQL_ADMIN_PASSWORD=$(decode_secret_key "$(get_secret_data_key "postgres-password" "{.data['postgres-password']}")" "postgres-password")
 fi
 
 HELM_ARGS=(upgrade --install "$RELEASE_NAME" "$CHART_PATH" -n "$NAMESPACE" --create-namespace --wait --timeout 10m)
