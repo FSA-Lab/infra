@@ -48,7 +48,7 @@ cleanup_orphaned_resource() {
     return 1
   fi
 
-  if ! [[ "$wait_seconds" =~ ^[0-9]+$ ]] || [ "$wait_seconds" -le 0 ]; then
+  if ! [[ "$wait_seconds" =~ ^[0-9]+$ ]] || [ "$wait_seconds" -lt 1 ]; then
     echo "ERROR: ORPHAN_CLEANUP_WAIT_SECONDS must be a positive integer; got '$wait_seconds'." >&2
     return 1
   fi
