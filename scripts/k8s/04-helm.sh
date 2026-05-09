@@ -72,6 +72,7 @@ decode_base64() {
   fi
 
   if ! decoded=$(printf '%s' "$value" | base64 --decode 2>/dev/null); then
+    decoded=""
     echo "WARN: failed to decode base64 for key '$label' (value may be invalid base64, or base64 utility may be unavailable); continuing with empty decoded value." >&2
     return 0
   fi
@@ -92,6 +93,7 @@ get_secret_data_key() {
   jsonpath_query="{.data['$key_label']}"
 
   if ! value=$(kubectl -n "$NAMESPACE" get secret "$POSTGRESQL_SECRET_NAME" -o jsonpath="$jsonpath_query" 2>/dev/null); then
+    value=""
     echo "WARN: failed to read key '$key_label' from secret/$POSTGRESQL_SECRET_NAME; continuing with empty value." >&2
     return 0
   fi
