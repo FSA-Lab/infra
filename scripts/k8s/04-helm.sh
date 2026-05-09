@@ -282,7 +282,7 @@ helm dependency update "$CHART_PATH"
 
 if [ -n "$AKS_RESOURCE_GROUP_NAME" ]; then
   ensure_extra_values_file
-  cat >> "$EXTRA_VALUES_FILE" <<YAML
+  cat > "$EXTRA_VALUES_FILE" <<YAML
 ingress-nginx:
   controller:
     service:
@@ -395,7 +395,7 @@ fi
 
 cat "$HELM_OUTPUT_FILE" >&2
 
-RETRY_REQUIRED=false
+retry_required=false
 
 if is_truthy "$RECREATE_POSTGRESQL_STATEFULSET_ON_IMMUTABLE_ERROR" \
   && grep -Fq "cannot patch" "$HELM_OUTPUT_FILE" \
@@ -424,7 +424,7 @@ if is_truthy "$RECREATE_POSTGRESQL_STATEFULSET_ON_IMMUTABLE_ERROR" \
     fi
   fi
 
-  RETRY_REQUIRED=true
+  retry_required=true
 fi
 
 if is_truthy "$RECOVER_INGRESS_WEBHOOK_CA_ON_TLS_ERROR" \
@@ -433,10 +433,10 @@ if is_truthy "$RECOVER_INGRESS_WEBHOOK_CA_ON_TLS_ERROR" \
   echo "WARN: Detected ingress-nginx admission webhook TLS trust failure." >&2
   echo "WARN: Deleting admission webhook configurations and retrying Helm once." >&2
   cleanup_ingress_admission_webhooks
-  RETRY_REQUIRED=true
+  retry_required=true
 fi
 
-if [ "$RETRY_REQUIRED" = true ]; then
+if [ "$retry_required" = true ]; then
   if helm "${HELM_ARGS[@]}" >"$HELM_OUTPUT_FILE" 2>&1; then
     cat "$HELM_OUTPUT_FILE"
     rm -f "$HELM_OUTPUT_FILE"
