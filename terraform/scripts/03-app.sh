@@ -31,18 +31,18 @@ if [ -n "${TF_VAR_FUNCTIONS_RESOURCE_GROUP_NAME:-}" ] && [ -n "$DETECTED_SUBSCRI
   import_diagnostic_setting_if_exists() {
     local terraform_address=$1
     local resource_id=$2
-    local output
+    local import_output
 
-    if output=$(terraform import "$terraform_address" "$resource_id" 2>&1); then
+    if import_output=$(terraform import "$terraform_address" "$resource_id" 2>&1); then
       echo "INFO: imported existing diagnostic setting into state: $terraform_address" >&2
     else
       if terraform state show "$terraform_address" >/dev/null 2>&1; then
         echo "INFO: diagnostic setting already managed in state: $terraform_address" >&2
-      elif echo "$output" | grep -qi "Cannot import non-existent remote object"; then
+      elif echo "$import_output" | grep -qi "Cannot import non-existent remote object"; then
         echo "INFO: diagnostic setting not found remotely yet, continuing: $terraform_address" >&2
       else
         echo "WARN: import attempt failed for $terraform_address; continuing to terraform apply" >&2
-        echo "$output" >&2
+        echo "$import_output" >&2
       fi
     fi
   }
