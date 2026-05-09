@@ -96,6 +96,25 @@ yaml_single_quote_escape() {
   printf '%s' "$value" | sed "s/'/''/g"
 }
 
+append_postgresql_auth_block() {
+  local section=${1:-}
+
+  if [ -z "$section" ]; then
+    echo "ERROR: append_postgresql_auth_block requires a section name." >&2
+    return 1
+  fi
+
+  echo "$section:"
+  echo "  postgresql:"
+  echo "    auth:"
+  if [ -n "$POSTGRESQL_PASSWORD" ]; then
+    echo "      password: '$(yaml_single_quote_escape "$POSTGRESQL_PASSWORD")'"
+  fi
+  if [ -n "$POSTGRESQL_ADMIN_PASSWORD" ]; then
+    echo "      postgresPassword: '$(yaml_single_quote_escape "$POSTGRESQL_ADMIN_PASSWORD")'"
+  fi
+}
+
 helm dependency update "$CHART_PATH"
 
 if [ -n "$AKS_RESOURCE_GROUP_NAME" ]; then
@@ -131,24 +150,8 @@ fi
 if [ -n "$POSTGRESQL_PASSWORD" ] || [ -n "$POSTGRESQL_ADMIN_PASSWORD" ]; then
   ensure_extra_values_file
   {
-    echo "global:"
-    echo "  postgresql:"
-    echo "    auth:"
-    if [ -n "$POSTGRESQL_PASSWORD" ]; then
-      echo "      password: '$(yaml_single_quote_escape "$POSTGRESQL_PASSWORD")'"
-    fi
-    if [ -n "$POSTGRESQL_ADMIN_PASSWORD" ]; then
-      echo "      postgresPassword: '$(yaml_single_quote_escape "$POSTGRESQL_ADMIN_PASSWORD")'"
-    fi
-    echo "keycloak:"
-    echo "  postgresql:"
-    echo "    auth:"
-    if [ -n "$POSTGRESQL_PASSWORD" ]; then
-      echo "      password: '$(yaml_single_quote_escape "$POSTGRESQL_PASSWORD")'"
-    fi
-    if [ -n "$POSTGRESQL_ADMIN_PASSWORD" ]; then
-      echo "      postgresPassword: '$(yaml_single_quote_escape "$POSTGRESQL_ADMIN_PASSWORD")'"
-    fi
+    append_postgresql_auth_block "global"
+    append_postgresql_auth_block "keycloak"
   } >> "$EXTRA_VALUES_FILE"
 fi
 
