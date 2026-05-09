@@ -13,6 +13,10 @@ AKS_RESOURCE_GROUP_NAME=${AKS_RESOURCE_GROUP_NAME:-}
 TMP_BASE=${TMPDIR:-/tmp}
 ORPHAN_CLEANUP_WAIT_SECONDS=${ORPHAN_CLEANUP_WAIT_SECONDS:-60}
 RECREATE_POSTGRESQL_STATEFULSET_ON_IMMUTABLE_ERROR=${RECREATE_POSTGRESQL_STATEFULSET_ON_IMMUTABLE_ERROR:-true}
+DELETE_POSTGRESQL_PVCS_ON_IMMUTABLE_ERROR=${DELETE_POSTGRESQL_PVCS_ON_IMMUTABLE_ERROR:-true}
+RECOVER_INGRESS_WEBHOOK_CA_ON_TLS_ERROR=${RECOVER_INGRESS_WEBHOOK_CA_ON_TLS_ERROR:-true}
+INGRESS_ADMISSION_WEBHOOK_RESOURCE_NAME=${INGRESS_ADMISSION_WEBHOOK_RESOURCE_NAME:-${RELEASE_NAME}-ingress-nginx-admission}
+JENKINS_PVC_NAME=${JENKINS_PVC_NAME:-${RELEASE_NAME}-jenkins}
 EXTRA_VALUES_FILE=""
 POSTGRESQL_PASSWORD=""
 POSTGRESQL_ADMIN_PASSWORD=""
@@ -208,11 +212,77 @@ upsert_postgresql_secret() {
     --dry-run=client -o yaml | kubectl apply -f - >/dev/null
 }
 
+append_jenkins_persistence_overrides() {
+  local jenkins_storage_class=""
+  local jenkins_size=""
+
+  if ! kubectl -n "$NAMESPACE" get pvc "$JENKINS_PVC_NAME" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  jenkins_storage_class=$(kubectl -n "$NAMESPACE" get pvc "$JENKINS_PVC_NAME" -o jsonpath='{.spec.storageClassName}' 2>/dev/null || true)
+  jenkins_size=$(kubectl -n "$NAMESPACE" get pvc "$JENKINS_PVC_NAME" -o jsonpath='{.spec.resources.requests.storage}' 2>/dev/null || true)
+
+  if [ -z "$jenkins_storage_class" ] && [ -z "$jenkins_size" ]; then
+    return 0
+  fi
+
+  ensure_extra_values_file
+  cat >> "$EXTRA_VALUES_FILE" <<YAML
+jenkins:
+  persistence:
+YAML
+
+  if [ -n "$jenkins_storage_class" ]; then
+    cat >> "$EXTRA_VALUES_FILE" <<YAML
+    storageClass: "$jenkins_storage_class"
+YAML
+  fi
+
+  if [ -n "$jenkins_size" ]; then
+    cat >> "$EXTRA_VALUES_FILE" <<YAML
+    size: "$jenkins_size"
+YAML
+  fi
+}
+
+cleanup_postgresql_pvcs() {
+  local wait_seconds="$ORPHAN_CLEANUP_WAIT_SECONDS"
+  local pvc_name=""
+  local pvc_names
+
+  if ! [[ "$wait_seconds" =~ ^[0-9]+$ ]] || [ "$wait_seconds" -lt 1 ]; then
+    echo "ERROR: ORPHAN_CLEANUP_WAIT_SECONDS must be a positive integer; got '$wait_seconds'." >&2
+    return 1
+  fi
+
+  pvc_names=$(kubectl -n "$NAMESPACE" get pvc -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null | grep -F "$POSTGRESQL_RESOURCE_NAME" || true)
+  if [ -z "$pvc_names" ]; then
+    return 0
+  fi
+
+  while IFS= read -r pvc_name; do
+    [ -z "$pvc_name" ] && continue
+    kubectl -n "$NAMESPACE" delete pvc "$pvc_name" --ignore-not-found
+    if ! kubectl -n "$NAMESPACE" wait --for=delete "pvc/$pvc_name" --timeout="${wait_seconds}s" >/dev/null 2>&1; then
+      if kubectl -n "$NAMESPACE" get pvc "$pvc_name" >/dev/null 2>&1; then
+        echo "ERROR: timed out waiting for pvc/$pvc_name deletion in namespace $NAMESPACE." >&2
+        return 1
+      fi
+    fi
+  done <<< "$pvc_names"
+}
+
+cleanup_ingress_admission_webhooks() {
+  kubectl delete validatingwebhookconfiguration "$INGRESS_ADMISSION_WEBHOOK_RESOURCE_NAME" --ignore-not-found >/dev/null 2>&1 || true
+  kubectl delete mutatingwebhookconfiguration "$INGRESS_ADMISSION_WEBHOOK_RESOURCE_NAME" --ignore-not-found >/dev/null 2>&1 || true
+}
+
 helm dependency update "$CHART_PATH"
 
 if [ -n "$AKS_RESOURCE_GROUP_NAME" ]; then
   ensure_extra_values_file
-  cat > "$EXTRA_VALUES_FILE" <<YAML
+  cat >> "$EXTRA_VALUES_FILE" <<YAML
 ingress-nginx:
   controller:
     service:
@@ -220,6 +290,8 @@ ingress-nginx:
         service.beta.kubernetes.io/azure-load-balancer-resource-group: "$AKS_RESOURCE_GROUP_NAME"
 YAML
 fi
+
+append_jenkins_persistence_overrides
 
 if ! helm status "$RELEASE_NAME" -n "$NAMESPACE" >/dev/null 2>&1; then
   if ! cleanup_orphaned_resource service "$POSTGRESQL_RESOURCE_NAME"; then
@@ -323,13 +395,15 @@ fi
 
 cat "$HELM_OUTPUT_FILE" >&2
 
+RETRY_REQUIRED=false
+
 if is_truthy "$RECREATE_POSTGRESQL_STATEFULSET_ON_IMMUTABLE_ERROR" \
   && grep -Fq "cannot patch" "$HELM_OUTPUT_FILE" \
   && grep -Fq "$POSTGRESQL_RESOURCE_NAME" "$HELM_OUTPUT_FILE" \
   && grep -Fq "with kind StatefulSet" "$HELM_OUTPUT_FILE" \
   && grep -Fq "Forbidden: updates to statefulset spec" "$HELM_OUTPUT_FILE"; then
   echo "WARN: Detected immutable StatefulSet spec change for statefulset/$POSTGRESQL_RESOURCE_NAME." >&2
-  echo "WARN: Deleting resources and retrying the Helm upgrade once with --force (PVC data retention depends on storage class and reclaim policy)." >&2
+  echo "WARN: Deleting resources and retrying the Helm upgrade once." >&2
   if ! cleanup_orphaned_resource statefulset "$POSTGRESQL_RESOURCE_NAME"; then
     echo "ERROR: failed to cleanup statefulset/$POSTGRESQL_RESOURCE_NAME before the Helm retry." >&2
     rm -f "$HELM_OUTPUT_FILE"
@@ -341,15 +415,36 @@ if is_truthy "$RECREATE_POSTGRESQL_STATEFULSET_ON_IMMUTABLE_ERROR" \
     exit 1
   fi
 
-  HELM_FORCE_ARGS=( "${HELM_ARGS[@]}" --force )
-  if helm "${HELM_FORCE_ARGS[@]}" >"$HELM_OUTPUT_FILE" 2>&1; then
+  if is_truthy "$DELETE_POSTGRESQL_PVCS_ON_IMMUTABLE_ERROR"; then
+    echo "WARN: Deleting PostgreSQL PVCs matching '$POSTGRESQL_RESOURCE_NAME' before retry." >&2
+    if ! cleanup_postgresql_pvcs; then
+      echo "ERROR: failed to cleanup PostgreSQL PVCs for '$POSTGRESQL_RESOURCE_NAME' before the Helm retry." >&2
+      rm -f "$HELM_OUTPUT_FILE"
+      exit 1
+    fi
+  fi
+
+  RETRY_REQUIRED=true
+fi
+
+if is_truthy "$RECOVER_INGRESS_WEBHOOK_CA_ON_TLS_ERROR" \
+  && grep -Fq 'failed calling webhook "validate.nginx.ingress.kubernetes.io"' "$HELM_OUTPUT_FILE" \
+  && grep -Fq "x509: certificate signed by unknown authority" "$HELM_OUTPUT_FILE"; then
+  echo "WARN: Detected ingress-nginx admission webhook TLS trust failure." >&2
+  echo "WARN: Deleting admission webhook configurations and retrying Helm once." >&2
+  cleanup_ingress_admission_webhooks
+  RETRY_REQUIRED=true
+fi
+
+if [ "$RETRY_REQUIRED" = true ]; then
+  if helm "${HELM_ARGS[@]}" >"$HELM_OUTPUT_FILE" 2>&1; then
     cat "$HELM_OUTPUT_FILE"
     rm -f "$HELM_OUTPUT_FILE"
     exit 0
   fi
 
   cat "$HELM_OUTPUT_FILE" >&2
-  echo "ERROR: Helm retry after StatefulSet recreation failed (including --force)." >&2
+  echo "ERROR: Helm retry after recovery actions failed." >&2
 fi
 
 rm -f "$HELM_OUTPUT_FILE"

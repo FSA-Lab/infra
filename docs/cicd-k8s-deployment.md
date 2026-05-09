@@ -60,10 +60,18 @@ Optional flags:
 - `KEYCLOAK_POSTGRESQL_PASSWORD` and `KEYCLOAK_POSTGRESQL_ADMIN_PASSWORD` to provide persistent credentials from CI secret storage when cluster secret sync is unavailable
 - `ORPHAN_CLEANUP_WAIT_SECONDS` to tune how long `04-helm.sh` waits for orphan PostgreSQL resources to fully delete (default `60`)
 - `RECREATE_POSTGRESQL_STATEFULSET_ON_IMMUTABLE_ERROR` to allow one delete/recreate retry when Helm upgrade hits immutable StatefulSet spec changes for `${POSTGRESQL_RESOURCE_NAME}` (default `true`)
+- `DELETE_POSTGRESQL_PVCS_ON_IMMUTABLE_ERROR` to also delete matching PostgreSQL PVCs before retry when StatefulSet spec is immutable (default `true`)
+- `RECOVER_INGRESS_WEBHOOK_CA_ON_TLS_ERROR` to recover from ingress-nginx admission webhook CA trust failures by deleting stale webhook configs before one retry (default `true`)
+- `INGRESS_ADMISSION_WEBHOOK_RESOURCE_NAME` to override the ingress-nginx admission webhook resource name cleaned up on TLS trust failures (default `${RELEASE_NAME}-ingress-nginx-admission`)
+- `JENKINS_PVC_NAME` to override the Jenkins PVC name used for persistence compatibility overrides during upgrade (default `${RELEASE_NAME}-jenkins`)
 
 `04-helm.sh` also performs a preflight cleanup for orphaned Service and StatefulSet named by `POSTGRESQL_RESOURCE_NAME` (default `${RELEASE_NAME}-postgresql`) when Helm release metadata is missing, while skipping resources owned by a different Helm release. When cleanup occurs, the script now waits for deletion completion before proceeding to Helm install/upgrade.
 
-When a Helm upgrade fails due to immutable spec updates on `statefulset/${POSTGRESQL_RESOURCE_NAME}`, `04-helm.sh` can delete and recreate the PostgreSQL StatefulSet (and matching Service) and retry Helm once with `--force`. PVC data retention during this recovery depends on your storage class and reclaim policy configuration.
+When a Helm upgrade fails due to immutable spec updates on `statefulset/${POSTGRESQL_RESOURCE_NAME}`, `04-helm.sh` can delete and recreate the PostgreSQL StatefulSet (and matching Service), optionally delete matching PostgreSQL PVCs, and retry Helm once. PVC data retention during this recovery depends on your storage class and reclaim policy configuration.
+
+When Helm output shows `validate.nginx.ingress.kubernetes.io` TLS trust errors (`x509: certificate signed by unknown authority`), `04-helm.sh` can delete stale ingress-nginx admission webhook configurations and retry once.
+
+`04-helm.sh` also preserves Jenkins persistence compatibility by detecting an existing Jenkins PVC and passing its current storage class and size as Helm overrides during upgrade.
 
 `04-helm.sh` now enforces durable Keycloak PostgreSQL credentials before Helm upgrade:
 

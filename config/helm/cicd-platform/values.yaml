@@ -3,6 +3,8 @@ global:
 
 ingress-nginx:
   controller:
+    admissionWebhooks:
+      failurePolicy: Ignore
     nodeSelector:
       workload: tools
     tolerations:
