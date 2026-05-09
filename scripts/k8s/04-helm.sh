@@ -6,9 +6,12 @@ NAMESPACE=${NAMESPACE:-cicd}
 CHART_PATH="$ROOT_DIR/config/helm/cicd-platform"
 RELEASE_NAME=${RELEASE_NAME:-cicd-platform}
 POSTGRESQL_RESOURCE_NAME=${POSTGRESQL_RESOURCE_NAME:-${RELEASE_NAME}-postgresql}
+POSTGRESQL_SECRET_NAME=${POSTGRESQL_SECRET_NAME:-keycloak-postgresql}
 VALUES_FILE=${VALUES_FILE:-}
 AKS_RESOURCE_GROUP_NAME=${AKS_RESOURCE_GROUP_NAME:-}
 EXTRA_VALUES_FILE=""
+POSTGRESQL_PASSWORD=""
+POSTGRESQL_ADMIN_PASSWORD=""
 
 cleanup_orphaned_resource() {
   local kind=$1
@@ -42,6 +45,15 @@ cleanup_orphaned_resource() {
   kubectl -n "$NAMESPACE" delete "$kind" "$name" --ignore-not-found
 }
 
+decode_b64() {
+  local value=${1:-}
+  if [ -z "$value" ]; then
+    return 0
+  fi
+
+  printf '%s' "$value" | base64 --decode 2>/dev/null || true
+}
+
 helm dependency update "$CHART_PATH"
 
 if [ -n "$AKS_RESOURCE_GROUP_NAME" ]; then
@@ -69,6 +81,11 @@ if ! helm status "$RELEASE_NAME" -n "$NAMESPACE" >/dev/null 2>&1; then
   fi
 fi
 
+if kubectl -n "$NAMESPACE" get secret "$POSTGRESQL_SECRET_NAME" >/dev/null 2>&1; then
+  POSTGRESQL_PASSWORD=$(decode_b64 "$(kubectl -n "$NAMESPACE" get secret "$POSTGRESQL_SECRET_NAME" -o jsonpath="{.data.password}" 2>/dev/null || true)")
+  POSTGRESQL_ADMIN_PASSWORD=$(decode_b64 "$(kubectl -n "$NAMESPACE" get secret "$POSTGRESQL_SECRET_NAME" -o jsonpath="{.data['postgres-password']}" 2>/dev/null || true)")
+fi
+
 HELM_ARGS=(upgrade --install "$RELEASE_NAME" "$CHART_PATH" -n "$NAMESPACE" --create-namespace --wait --timeout 10m)
 
 if [ -n "$VALUES_FILE" ]; then
@@ -77,6 +94,16 @@ fi
 
 if [ -n "$EXTRA_VALUES_FILE" ]; then
   HELM_ARGS+=( -f "$EXTRA_VALUES_FILE" )
+fi
+
+if [ -n "$POSTGRESQL_PASSWORD" ]; then
+  HELM_ARGS+=( --set-string "global.postgresql.auth.password=$POSTGRESQL_PASSWORD" )
+  HELM_ARGS+=( --set-string "keycloak.postgresql.auth.password=$POSTGRESQL_PASSWORD" )
+fi
+
+if [ -n "$POSTGRESQL_ADMIN_PASSWORD" ]; then
+  HELM_ARGS+=( --set-string "global.postgresql.auth.postgresPassword=$POSTGRESQL_ADMIN_PASSWORD" )
+  HELM_ARGS+=( --set-string "keycloak.postgresql.auth.postgresPassword=$POSTGRESQL_ADMIN_PASSWORD" )
 fi
 
 helm "${HELM_ARGS[@]}"
