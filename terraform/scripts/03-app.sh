@@ -64,7 +64,7 @@ import_from_apply_log() {
 }
 
 while [ "$APPLY_ATTEMPT" -le "$MAX_APPLY_ATTEMPTS" ]; do
-  APPLY_LOG="/tmp/terraform-functions-apply-${APPLY_ATTEMPT}.log"
+  APPLY_LOG=$(mktemp "/tmp/terraform-functions-apply-${APPLY_ATTEMPT}-XXXXXX.log")
   echo "INFO: terraform apply attempt ${APPLY_ATTEMPT}/${MAX_APPLY_ATTEMPTS}" >&2
 
   set +e
