@@ -25,10 +25,10 @@ if [ -n "${TF_VAR_FUNCTIONS_RESOURCE_GROUP_NAME:-}" ] && [ -n "$SUBSCRIPTION_ID"
   SB_NAME="${TF_VAR_FUNCTIONS_SERVICEBUS_NAMESPACE_NAME:-}"
   FA_NAME="${TF_VAR_FUNCTIONS_FUNCTION_APP_NAME:-}"
 
-  import_diag_if_exists() {
+  import_diagnostic_setting_if_exists() {
     local address=$1
     local resource_id=$2
-    local output=""
+    local output
 
     if output=$(terraform import "$address" "$resource_id" 2>&1); then
       echo "INFO: imported existing diagnostic setting into state: $address" >&2
@@ -45,25 +45,25 @@ if [ -n "${TF_VAR_FUNCTIONS_RESOURCE_GROUP_NAME:-}" ] && [ -n "$SUBSCRIPTION_ID"
   }
 
   if [ -n "$SA_NAME" ]; then
-    import_diag_if_exists \
+    import_diagnostic_setting_if_exists \
       "azurerm_monitor_diagnostic_setting.storage" \
       "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RG_NAME/providers/Microsoft.Storage/storageAccounts/$SA_NAME|diag-storage"
   fi
 
   if [ -n "$PG_NAME" ]; then
-    import_diag_if_exists \
+    import_diagnostic_setting_if_exists \
       "azurerm_monitor_diagnostic_setting.postgres" \
       "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RG_NAME/providers/Microsoft.DBforPostgreSQL/flexibleServers/$PG_NAME|diag-postgres"
   fi
 
   if [ -n "$SB_NAME" ]; then
-    import_diag_if_exists \
+    import_diagnostic_setting_if_exists \
       "azurerm_monitor_diagnostic_setting.servicebus" \
       "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RG_NAME/providers/Microsoft.ServiceBus/namespaces/$SB_NAME|diag-servicebus"
   fi
 
   if [ -n "$FA_NAME" ]; then
-    import_diag_if_exists \
+    import_diagnostic_setting_if_exists \
       "azurerm_monitor_diagnostic_setting.function_app" \
       "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RG_NAME/providers/Microsoft.Web/sites/$FA_NAME|diag-function-app"
   fi
