@@ -9,12 +9,25 @@ POSTGRESQL_RESOURCE_NAME=${POSTGRESQL_RESOURCE_NAME:-${RELEASE_NAME}-postgresql}
 POSTGRESQL_SECRET_NAME=${POSTGRESQL_SECRET_NAME:-keycloak-postgresql}
 VALUES_FILE=${VALUES_FILE:-}
 AKS_RESOURCE_GROUP_NAME=${AKS_RESOURCE_GROUP_NAME:-}
+TMP_BASE=${TMPDIR:-/tmp}
 EXTRA_VALUES_FILE=""
 POSTGRESQL_PASSWORD=""
 POSTGRESQL_ADMIN_PASSWORD=""
 POSTGRESQL_PASSWORD_FILE=""
 POSTGRESQL_ADMIN_PASSWORD_FILE=""
-trap 'rm -f "$EXTRA_VALUES_FILE" "$POSTGRESQL_PASSWORD_FILE" "$POSTGRESQL_ADMIN_PASSWORD_FILE"' EXIT
+
+cleanup_temp_files() {
+  if [ -n "$EXTRA_VALUES_FILE" ] && [ -f "$EXTRA_VALUES_FILE" ]; then
+    rm -f "$EXTRA_VALUES_FILE"
+  fi
+  if [ -n "$POSTGRESQL_PASSWORD_FILE" ] && [ -f "$POSTGRESQL_PASSWORD_FILE" ]; then
+    rm -f "$POSTGRESQL_PASSWORD_FILE"
+  fi
+  if [ -n "$POSTGRESQL_ADMIN_PASSWORD_FILE" ] && [ -f "$POSTGRESQL_ADMIN_PASSWORD_FILE" ]; then
+    rm -f "$POSTGRESQL_ADMIN_PASSWORD_FILE"
+  fi
+}
+trap cleanup_temp_files EXIT
 
 cleanup_orphaned_resource() {
   local kind=$1
@@ -91,7 +104,6 @@ ensure_extra_values_file() {
   fi
 
   umask 077
-  TMP_BASE="${TMPDIR:-/tmp}"
   EXTRA_VALUES_FILE=$(mktemp "${TMP_BASE}/helm-values.XXXXXXXXXX.yaml")
 }
 
@@ -100,9 +112,11 @@ create_secret_value_file() {
   local file_path=""
 
   umask 077
-  TMP_BASE="${TMPDIR:-/tmp}"
   file_path=$(mktemp "${TMP_BASE}/helm-secret.XXXXXXXXXX")
-  printf '%s' "$value" > "$file_path"
+  if ! printf '%s' "$value" > "$file_path"; then
+    rm -f "$file_path"
+    return 1
+  fi
   printf '%s' "$file_path"
 }
 
