@@ -28,7 +28,11 @@ if [ -n "${TF_VAR_FUNCTIONS_RESOURCE_GROUP_NAME:-}" ] && [ -n "$SUBSCRIPTION_ID"
   import_diag_if_exists() {
     local address=$1
     local resource_id=$2
-    terraform import "$address" "$resource_id" >/dev/null 2>&1 || true
+    if terraform import "$address" "$resource_id" >/dev/null 2>&1; then
+      echo "INFO: imported existing diagnostic setting into state: $address" >&2
+    else
+      echo "INFO: no import needed for $address (resource may not exist yet or already managed)." >&2
+    fi
   }
 
   if [ -n "$SA_NAME" ]; then
@@ -54,6 +58,10 @@ if [ -n "${TF_VAR_FUNCTIONS_RESOURCE_GROUP_NAME:-}" ] && [ -n "$SUBSCRIPTION_ID"
       "azurerm_monitor_diagnostic_setting.function_app" \
       "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RG_NAME/providers/Microsoft.Web/sites/$FA_NAME|diag-function-app"
   fi
+fi
+
+if [ -z "$SUBSCRIPTION_ID" ]; then
+  echo "WARN: subscription ID not detected; skipping diagnostic-setting import precheck." >&2
 fi
 
 terraform apply -auto-approve
