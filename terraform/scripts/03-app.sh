@@ -14,7 +14,6 @@ cd $HOME_DIR/terraform/modules/functions
 terraform init
 
 MAX_APPLY_ATTEMPTS=3
-APPLY_ATTEMPT=1
 APPLY_LOG_FILES=()
 
 cleanup_apply_logs() {
@@ -91,6 +90,7 @@ for ((APPLY_ATTEMPT=1; APPLY_ATTEMPT<=MAX_APPLY_ATTEMPTS; APPLY_ATTEMPT++)); do
   echo "INFO: terraform apply attempt ${APPLY_ATTEMPT}/${MAX_APPLY_ATTEMPTS}" >&2
 
   set +e
+  # Keep -no-color enabled because import-error parsing expects plain text output.
   terraform apply -auto-approve -no-color 2>&1 | tee "$APPLY_LOG"
   APPLY_EXIT_CODE=${PIPESTATUS[0]}
   set -e
