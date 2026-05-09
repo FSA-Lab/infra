@@ -10,6 +10,8 @@ jobs:
   terraform-deploy:
     runs-on: ubuntu-latest
     env:
+      KEYCLOAK_POSTGRESQL_PASSWORD: ${{ secrets.KEYCLOAK_POSTGRESQL_PASSWORD }}
+      KEYCLOAK_POSTGRESQL_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_POSTGRESQL_ADMIN_PASSWORD }}
       TF_PLUGIN_CACHE_DIR: ${{ github.workspace }}/.terraform.d/plugin-cache
       TF_VAR_AKS_APPS_NODE_COUNT: ${{ vars.TF_VAR_AKS_APPS_NODE_COUNT }}
       TF_VAR_AKS_APPS_VM_SIZE: ${{ vars.TF_VAR_AKS_APPS_VM_SIZE }}
