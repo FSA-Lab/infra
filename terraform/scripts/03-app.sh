@@ -16,6 +16,9 @@ terraform init
 SUBSCRIPTION_ID=${ARM_SUBSCRIPTION_ID:-${AZURE_SUBSCRIPTION_ID:-}}
 if [ -z "$SUBSCRIPTION_ID" ] && command -v az >/dev/null 2>&1; then
   SUBSCRIPTION_ID=$(az account show --query id -o tsv 2>/dev/null || true)
+  if [ -z "$SUBSCRIPTION_ID" ]; then
+    echo "WARN: unable to determine subscription ID from Azure CLI; import precheck may be skipped" >&2
+  fi
 fi
 
 if [ -n "${TF_VAR_FUNCTIONS_RESOURCE_GROUP_NAME:-}" ] && [ -n "$SUBSCRIPTION_ID" ]; then
@@ -38,7 +41,7 @@ if [ -n "${TF_VAR_FUNCTIONS_RESOURCE_GROUP_NAME:-}" ] && [ -n "$SUBSCRIPTION_ID"
       elif echo "$output" | grep -qi "Cannot import non-existent remote object"; then
         echo "INFO: diagnostic setting not found remotely yet, continuing: $address" >&2
       else
-        echo "WARN: import attempt failed for $address; continuing to terraform apply." >&2
+        echo "WARN: import attempt failed for $address; continuing to terraform apply" >&2
         echo "$output" >&2
       fi
     fi
