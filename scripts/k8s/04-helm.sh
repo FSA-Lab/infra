@@ -324,9 +324,10 @@ fi
 cat "$HELM_OUTPUT_FILE" >&2
 
 if is_truthy "$RECREATE_POSTGRESQL_STATEFULSET_ON_IMMUTABLE_ERROR" \
-  && grep -Fq "cannot patch \"$POSTGRESQL_RESOURCE_NAME\" with kind StatefulSet" "$HELM_OUTPUT_FILE" \
+  && (grep -Fq "cannot patch \"$POSTGRESQL_RESOURCE_NAME\" with kind StatefulSet" "$HELM_OUTPUT_FILE" \
+      || grep -Fq "cannot patch $POSTGRESQL_RESOURCE_NAME with kind StatefulSet" "$HELM_OUTPUT_FILE") \
   && grep -Fq "Forbidden: updates to statefulset spec" "$HELM_OUTPUT_FILE"; then
-  echo "WARN: detected immutable StatefulSet spec change for statefulset/$POSTGRESQL_RESOURCE_NAME; deleting and retrying the Helm upgrade once." >&2
+  echo "WARN: Detected immutable StatefulSet spec change for statefulset/$POSTGRESQL_RESOURCE_NAME; deleting and retrying the Helm upgrade once." >&2
   if ! cleanup_orphaned_resource statefulset "$POSTGRESQL_RESOURCE_NAME"; then
     echo "ERROR: failed to cleanup statefulset/$POSTGRESQL_RESOURCE_NAME before the Helm retry." >&2
     rm -f "$HELM_OUTPUT_FILE"
