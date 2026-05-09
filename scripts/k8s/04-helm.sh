@@ -17,6 +17,7 @@ DELETE_POSTGRESQL_PVCS_ON_IMMUTABLE_ERROR=${DELETE_POSTGRESQL_PVCS_ON_IMMUTABLE_
 RECOVER_INGRESS_WEBHOOK_CA_ON_TLS_ERROR=${RECOVER_INGRESS_WEBHOOK_CA_ON_TLS_ERROR:-true}
 INGRESS_ADMISSION_WEBHOOK_RESOURCE_NAME=${INGRESS_ADMISSION_WEBHOOK_RESOURCE_NAME:-${RELEASE_NAME}-ingress-nginx-admission}
 JENKINS_PVC_NAME=${JENKINS_PVC_NAME:-${RELEASE_NAME}-jenkins}
+POSTGRESQL_PVC_NAME_PREFIX=${POSTGRESQL_PVC_NAME_PREFIX:-data-${POSTGRESQL_RESOURCE_NAME}-}
 EXTRA_VALUES_FILE=""
 POSTGRESQL_PASSWORD=""
 POSTGRESQL_ADMIN_PASSWORD=""
@@ -256,7 +257,7 @@ cleanup_postgresql_pvcs() {
     return 1
   fi
 
-  pvc_names=$(kubectl -n "$NAMESPACE" get pvc -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null | grep -F "$POSTGRESQL_RESOURCE_NAME" || true)
+  pvc_names=$(kubectl -n "$NAMESPACE" get pvc -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null | grep -E "^${POSTGRESQL_PVC_NAME_PREFIX}" || true)
   if [ -z "$pvc_names" ]; then
     return 0
   fi
@@ -274,8 +275,12 @@ cleanup_postgresql_pvcs() {
 }
 
 cleanup_ingress_admission_webhooks() {
-  kubectl delete validatingwebhookconfiguration "$INGRESS_ADMISSION_WEBHOOK_RESOURCE_NAME" --ignore-not-found >/dev/null 2>&1 || true
-  kubectl delete mutatingwebhookconfiguration "$INGRESS_ADMISSION_WEBHOOK_RESOURCE_NAME" --ignore-not-found >/dev/null 2>&1 || true
+  if ! kubectl delete validatingwebhookconfiguration "$INGRESS_ADMISSION_WEBHOOK_RESOURCE_NAME" --ignore-not-found >/dev/null 2>&1; then
+    echo "WARN: failed to delete validatingwebhookconfiguration/$INGRESS_ADMISSION_WEBHOOK_RESOURCE_NAME during recovery." >&2
+  fi
+  if ! kubectl delete mutatingwebhookconfiguration "$INGRESS_ADMISSION_WEBHOOK_RESOURCE_NAME" --ignore-not-found >/dev/null 2>&1; then
+    echo "WARN: failed to delete mutatingwebhookconfiguration/$INGRESS_ADMISSION_WEBHOOK_RESOURCE_NAME during recovery." >&2
+  fi
 }
 
 helm dependency update "$CHART_PATH"

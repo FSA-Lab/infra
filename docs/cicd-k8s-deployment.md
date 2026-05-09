@@ -64,6 +64,7 @@ Optional flags:
 - `RECOVER_INGRESS_WEBHOOK_CA_ON_TLS_ERROR` to recover from ingress-nginx admission webhook CA trust failures by deleting stale webhook configs before one retry (default `true`)
 - `INGRESS_ADMISSION_WEBHOOK_RESOURCE_NAME` to override the ingress-nginx admission webhook resource name cleaned up on TLS trust failures (default `${RELEASE_NAME}-ingress-nginx-admission`)
 - `JENKINS_PVC_NAME` to override the Jenkins PVC name used for persistence compatibility overrides during upgrade (default `${RELEASE_NAME}-jenkins`)
+- `POSTGRESQL_PVC_NAME_PREFIX` to control which PostgreSQL PVC names are deleted on immutable StatefulSet retries (default `data-${POSTGRESQL_RESOURCE_NAME}-`)
 
 `04-helm.sh` also performs a preflight cleanup for orphaned Service and StatefulSet named by `POSTGRESQL_RESOURCE_NAME` (default `${RELEASE_NAME}-postgresql`) when Helm release metadata is missing, while skipping resources owned by a different Helm release. When cleanup occurs, the script now waits for deletion completion before proceeding to Helm install/upgrade.
 
