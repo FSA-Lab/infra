@@ -13,66 +13,75 @@ HOME_DIR=$(pwd)
 cd $HOME_DIR/terraform/modules/functions
 terraform init
 
-DETECTED_SUBSCRIPTION_ID=${ARM_SUBSCRIPTION_ID:-${AZURE_SUBSCRIPTION_ID:-}}
-if [ -z "$DETECTED_SUBSCRIPTION_ID" ] && command -v az >/dev/null 2>&1; then
-  DETECTED_SUBSCRIPTION_ID=$(az account show --query id -o tsv 2>/dev/null || true)
-  if [ -z "$DETECTED_SUBSCRIPTION_ID" ]; then
-    echo "WARN: unable to determine subscription ID from Azure CLI; diagnostic setting imports may be skipped" >&2
+MAX_APPLY_ATTEMPTS=3
+APPLY_ATTEMPT=1
+
+import_from_apply_log() {
+  local apply_log=$1
+  local candidates
+  local imported_any=false
+
+  candidates=$(awk '
+    /resource with the ID "/ && /already exists - to be managed via Terraform this resource needs to be imported into the State/ {
+      match($0, /"[^"]+"/)
+      if (RSTART > 0) {
+        pending_id = substr($0, RSTART + 1, RLENGTH - 2)
+      }
+      next
+    }
+    pending_id != "" && /with [^,]+,/ {
+      match($0, /with [^,]+,/)
+      if (RSTART > 0) {
+        address = substr($0, RSTART + 5, RLENGTH - 6)
+        print address "|" pending_id
+      }
+      pending_id = ""
+    }
+  ' "$apply_log")
+
+  if [ -z "$candidates" ]; then
+    return 1
   fi
-fi
 
-if [ -n "${TF_VAR_FUNCTIONS_RESOURCE_GROUP_NAME:-}" ] && [ -n "$DETECTED_SUBSCRIPTION_ID" ]; then
-  RG_NAME="$TF_VAR_FUNCTIONS_RESOURCE_GROUP_NAME"
-  STORAGE_ACCOUNT_NAME="${TF_VAR_FUNCTIONS_STORAGE_ACCOUNT_NAME:-}"
-  POSTGRES_SERVER_NAME="${TF_VAR_FUNCTIONS_POSTGRES_SERVER_NAME:-}"
-  SERVICEBUS_NAMESPACE_NAME="${TF_VAR_FUNCTIONS_SERVICEBUS_NAMESPACE_NAME:-}"
-  FUNCTION_APP_NAME="${TF_VAR_FUNCTIONS_FUNCTION_APP_NAME:-}"
-
-  import_diagnostic_setting_if_exists() {
-    local terraform_address=$1
-    local resource_id=$2
-    local import_output
+  while IFS='|' read -r terraform_address resource_id; do
+    [ -z "$terraform_address" ] && continue
+    [ -z "$resource_id" ] && continue
 
     if terraform state show "$terraform_address" >/dev/null 2>&1; then
-      echo "INFO: diagnostic setting already managed in state: $terraform_address" >&2
-      return 0
+      echo "INFO: already managed in state: $terraform_address" >&2
+      continue
     fi
 
-    if import_output=$(terraform import "$terraform_address" "$resource_id" 2>&1); then
-      echo "INFO: imported existing diagnostic setting into state: $terraform_address" >&2
+    echo "INFO: importing side-effect resource into state: $terraform_address" >&2
+    if terraform import "$terraform_address" "$resource_id"; then
+      imported_any=true
     else
-      if echo "$import_output" | grep -qi "Cannot import non-existent remote object"; then
-        echo "INFO: diagnostic setting not found remotely yet, continuing: $terraform_address" >&2
-      else
-        echo "WARN: import attempt failed for $terraform_address; continuing to terraform apply" >&2
-        echo "$import_output" >&2
-      fi
+      echo "WARN: failed to import $terraform_address ($resource_id)" >&2
     fi
-  }
+  done <<< "$candidates"
 
-  if [ -n "$STORAGE_ACCOUNT_NAME" ]; then
-    import_diagnostic_setting_if_exists \
-      "azurerm_monitor_diagnostic_setting.storage" \
-      "/subscriptions/$DETECTED_SUBSCRIPTION_ID/resourceGroups/$RG_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME|diag-storage"
+  [ "$imported_any" = true ]
+}
+
+while [ "$APPLY_ATTEMPT" -le "$MAX_APPLY_ATTEMPTS" ]; do
+  APPLY_LOG="/tmp/terraform-functions-apply-${APPLY_ATTEMPT}.log"
+  echo "INFO: terraform apply attempt ${APPLY_ATTEMPT}/${MAX_APPLY_ATTEMPTS}" >&2
+
+  set +e
+  terraform apply -auto-approve -no-color 2>&1 | tee "$APPLY_LOG"
+  APPLY_EXIT_CODE=${PIPESTATUS[0]}
+  set -e
+
+  if [ "$APPLY_EXIT_CODE" -eq 0 ]; then
+    exit 0
   fi
 
-  if [ -n "$POSTGRES_SERVER_NAME" ]; then
-    import_diagnostic_setting_if_exists \
-      "azurerm_monitor_diagnostic_setting.postgres" \
-      "/subscriptions/$DETECTED_SUBSCRIPTION_ID/resourceGroups/$RG_NAME/providers/Microsoft.DBforPostgreSQL/flexibleServers/$POSTGRES_SERVER_NAME|diag-postgres"
+  if ! import_from_apply_log "$APPLY_LOG"; then
+    exit "$APPLY_EXIT_CODE"
   fi
 
-  if [ -n "$SERVICEBUS_NAMESPACE_NAME" ]; then
-    import_diagnostic_setting_if_exists \
-      "azurerm_monitor_diagnostic_setting.servicebus" \
-      "/subscriptions/$DETECTED_SUBSCRIPTION_ID/resourceGroups/$RG_NAME/providers/Microsoft.ServiceBus/namespaces/$SERVICEBUS_NAMESPACE_NAME|diag-servicebus"
-  fi
+  APPLY_ATTEMPT=$((APPLY_ATTEMPT + 1))
+done
 
-  if [ -n "$FUNCTION_APP_NAME" ]; then
-    import_diagnostic_setting_if_exists \
-      "azurerm_monitor_diagnostic_setting.function_app" \
-      "/subscriptions/$DETECTED_SUBSCRIPTION_ID/resourceGroups/$RG_NAME/providers/Microsoft.Web/sites/$FUNCTION_APP_NAME|diag-function-app"
-  fi
-fi
-
-terraform apply -auto-approve
+echo "ERROR: terraform apply failed after ${MAX_APPLY_ATTEMPTS} attempts" >&2
+exit 1
