@@ -29,3 +29,5 @@ env:
 
 7. Despite adding terraform plugin cache configuration in the workflow file, the cache is not being utilized, leading to longer execution times.
    --> Solution: ensure that the plugin cache directory is correctly set up and that the workflow has permission to write to it.
+
+8. Cannot update PostgreSQL StatefulSet in Kubernetes due to "immutable field" error when trying to change the storage class.

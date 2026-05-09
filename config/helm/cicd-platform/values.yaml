@@ -96,6 +96,9 @@ jenkins:
       ingressClassName: nginx
 
 sonarqube:
+  community:
+    enabled: true
+  monitoringPasscode: "${SONARQUBE_MONITORING_PASSCODE}"
   nodeSelector:
     workload: tools
   tolerations:
