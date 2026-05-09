@@ -17,7 +17,7 @@ DETECTED_SUBSCRIPTION_ID=${ARM_SUBSCRIPTION_ID:-${AZURE_SUBSCRIPTION_ID:-}}
 if [ -z "$DETECTED_SUBSCRIPTION_ID" ] && command -v az >/dev/null 2>&1; then
   DETECTED_SUBSCRIPTION_ID=$(az account show --query id -o tsv 2>/dev/null || true)
   if [ -z "$DETECTED_SUBSCRIPTION_ID" ]; then
-    echo "WARN: unable to determine subscription ID from Azure CLI; import precheck may be skipped" >&2
+    echo "WARN: unable to determine subscription ID from Azure CLI; diagnostic setting imports may be skipped" >&2
   fi
 fi
 
@@ -33,12 +33,15 @@ if [ -n "${TF_VAR_FUNCTIONS_RESOURCE_GROUP_NAME:-}" ] && [ -n "$DETECTED_SUBSCRI
     local resource_id=$2
     local import_output
 
+    if terraform state show "$terraform_address" >/dev/null 2>&1; then
+      echo "INFO: diagnostic setting already managed in state: $terraform_address" >&2
+      return 0
+    fi
+
     if import_output=$(terraform import "$terraform_address" "$resource_id" 2>&1); then
       echo "INFO: imported existing diagnostic setting into state: $terraform_address" >&2
     else
-      if terraform state show "$terraform_address" >/dev/null 2>&1; then
-        echo "INFO: diagnostic setting already managed in state: $terraform_address" >&2
-      elif echo "$import_output" | grep -qi "Cannot import non-existent remote object"; then
+      if echo "$import_output" | grep -qi "Cannot import non-existent remote object"; then
         echo "INFO: diagnostic setting not found remotely yet, continuing: $terraform_address" >&2
       else
         echo "WARN: import attempt failed for $terraform_address; continuing to terraform apply" >&2
