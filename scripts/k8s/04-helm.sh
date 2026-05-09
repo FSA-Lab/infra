@@ -63,17 +63,19 @@ decode_base64() {
 }
 
 get_secret_data_key() {
-  local key=${1:-}
-  local jsonpath=${2:-}
+  local key_label=${1:-}
+  local jsonpath_query=""
   local value=""
 
-  if [ -z "$key" ] || [ -z "$jsonpath" ]; then
-    echo "ERROR: get_secret_data_key requires key and jsonpath." >&2
+  if [ -z "$key_label" ]; then
+    echo "ERROR: get_secret_data_key requires key label." >&2
     return 1
   fi
 
-  if ! value=$(kubectl -n "$NAMESPACE" get secret "$POSTGRESQL_SECRET_NAME" -o jsonpath="$jsonpath" 2>/dev/null); then
-    echo "WARN: failed to read key '$key' from secret/$POSTGRESQL_SECRET_NAME." >&2
+  jsonpath_query="{.data['$key_label']}"
+
+  if ! value=$(kubectl -n "$NAMESPACE" get secret "$POSTGRESQL_SECRET_NAME" -o jsonpath="$jsonpath_query" 2>/dev/null); then
+    echo "WARN: failed to read key '$key_label' from secret/$POSTGRESQL_SECRET_NAME." >&2
     return 0
   fi
 
@@ -140,8 +142,8 @@ if ! helm status "$RELEASE_NAME" -n "$NAMESPACE" >/dev/null 2>&1; then
 fi
 
 if kubectl -n "$NAMESPACE" get secret "$POSTGRESQL_SECRET_NAME" >/dev/null 2>&1; then
-  secret_password_b64=$(get_secret_data_key "password" "{.data.password}")
-  secret_postgres_password_b64=$(get_secret_data_key "postgres-password" "{.data['postgres-password']}")
+  secret_password_b64=$(get_secret_data_key "password")
+  secret_postgres_password_b64=$(get_secret_data_key "postgres-password")
 
   POSTGRESQL_PASSWORD=$(decode_base64 "password" "$secret_password_b64")
   POSTGRESQL_ADMIN_PASSWORD=$(decode_base64 "postgres-password" "$secret_postgres_password_b64")
