@@ -12,6 +12,9 @@ AKS_RESOURCE_GROUP_NAME=${AKS_RESOURCE_GROUP_NAME:-}
 EXTRA_VALUES_FILE=""
 POSTGRESQL_PASSWORD=""
 POSTGRESQL_ADMIN_PASSWORD=""
+POSTGRESQL_PASSWORD_FILE=""
+POSTGRESQL_ADMIN_PASSWORD_FILE=""
+trap 'rm -f "$EXTRA_VALUES_FILE" "$POSTGRESQL_PASSWORD_FILE" "$POSTGRESQL_ADMIN_PASSWORD_FILE"' EXIT
 
 cleanup_orphaned_resource() {
   local kind=$1
@@ -90,31 +93,17 @@ ensure_extra_values_file() {
   umask 077
   TMP_BASE="${TMPDIR:-/tmp}"
   EXTRA_VALUES_FILE=$(mktemp "${TMP_BASE}/helm-values.XXXXXXXXXX.yaml")
-  trap 'rm -f "$EXTRA_VALUES_FILE"' EXIT
 }
 
-yaml_single_quote_escape() {
+create_secret_value_file() {
   local value=${1:-}
-  printf '%s' "$value" | sed "s/'/''/g"
-}
+  local file_path=""
 
-append_postgresql_auth_block() {
-  local section=${1:-}
-
-  if [ -z "$section" ]; then
-    echo "ERROR: append_postgresql_auth_block requires a section name." >&2
-    return 1
-  fi
-
-  echo "$section:"
-  echo "  postgresql:"
-  echo "    auth:"
-  if [ -n "$POSTGRESQL_PASSWORD" ]; then
-    echo "      password: '$(yaml_single_quote_escape "$POSTGRESQL_PASSWORD")'"
-  fi
-  if [ -n "$POSTGRESQL_ADMIN_PASSWORD" ]; then
-    echo "      postgresPassword: '$(yaml_single_quote_escape "$POSTGRESQL_ADMIN_PASSWORD")'"
-  fi
+  umask 077
+  TMP_BASE="${TMPDIR:-/tmp}"
+  file_path=$(mktemp "${TMP_BASE}/helm-secret.XXXXXXXXXX")
+  printf '%s' "$value" > "$file_path"
+  printf '%s' "$file_path"
 }
 
 helm dependency update "$CHART_PATH"
@@ -150,11 +139,12 @@ if kubectl -n "$NAMESPACE" get secret "$POSTGRESQL_SECRET_NAME" >/dev/null 2>&1;
 fi
 
 if [ -n "$POSTGRESQL_PASSWORD" ] || [ -n "$POSTGRESQL_ADMIN_PASSWORD" ]; then
-  ensure_extra_values_file
-  {
-    append_postgresql_auth_block "global"
-    append_postgresql_auth_block "keycloak"
-  } >> "$EXTRA_VALUES_FILE"
+  if [ -n "$POSTGRESQL_PASSWORD" ]; then
+    POSTGRESQL_PASSWORD_FILE=$(create_secret_value_file "$POSTGRESQL_PASSWORD")
+  fi
+  if [ -n "$POSTGRESQL_ADMIN_PASSWORD" ]; then
+    POSTGRESQL_ADMIN_PASSWORD_FILE=$(create_secret_value_file "$POSTGRESQL_ADMIN_PASSWORD")
+  fi
 fi
 
 HELM_ARGS=(upgrade --install "$RELEASE_NAME" "$CHART_PATH" -n "$NAMESPACE" --create-namespace --wait --timeout 10m)
@@ -165,6 +155,16 @@ fi
 
 if [ -n "$EXTRA_VALUES_FILE" ]; then
   HELM_ARGS+=( -f "$EXTRA_VALUES_FILE" )
+fi
+
+if [ -n "$POSTGRESQL_PASSWORD_FILE" ]; then
+  HELM_ARGS+=( --set-file "global.postgresql.auth.password=$POSTGRESQL_PASSWORD_FILE" )
+  HELM_ARGS+=( --set-file "keycloak.postgresql.auth.password=$POSTGRESQL_PASSWORD_FILE" )
+fi
+
+if [ -n "$POSTGRESQL_ADMIN_PASSWORD_FILE" ]; then
+  HELM_ARGS+=( --set-file "global.postgresql.auth.postgresPassword=$POSTGRESQL_ADMIN_PASSWORD_FILE" )
+  HELM_ARGS+=( --set-file "keycloak.postgresql.auth.postgresPassword=$POSTGRESQL_ADMIN_PASSWORD_FILE" )
 fi
 
 helm "${HELM_ARGS[@]}"
