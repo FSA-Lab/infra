@@ -59,7 +59,7 @@ Optional flags:
 - `KEYVAULT_NAME` (or `AZURE_KEYVAULT_NAME`) so `04-helm.sh` can read/write persistent Keycloak PostgreSQL credentials
 - `KEYCLOAK_POSTGRESQL_PASSWORD` and `KEYCLOAK_POSTGRESQL_ADMIN_PASSWORD` to provide persistent credentials from CI secret storage when cluster secret sync is unavailable
 
-`04-helm.sh` also performs a preflight cleanup for orphaned Service and StatefulSet named by `POSTGRESQL_RESOURCE_NAME` (default `${RELEASE_NAME}-postgresql`) when Helm release metadata is missing, while skipping resources owned by a different Helm release.
+`04-helm.sh` also performs a preflight cleanup for orphaned Service and StatefulSet named by `POSTGRESQL_RESOURCE_NAME` (default `${RELEASE_NAME}-postgresql`) when Helm release metadata is missing, while skipping resources owned by a different Helm release. When cleanup occurs, the script now waits for deletion completion before proceeding to Helm install/upgrade.
 
 `04-helm.sh` now enforces durable Keycloak PostgreSQL credentials before Helm upgrade:
 

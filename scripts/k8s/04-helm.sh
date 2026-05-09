@@ -40,6 +40,7 @@ cleanup_orphaned_resource() {
   local name=$2
   local owner_release=""
   local owner_namespace=""
+  local wait_seconds=60
 
   if [ -z "$kind" ] || [ -z "$name" ]; then
     echo "ERROR: cleanup_orphaned_resource requires kind and name." >&2
@@ -65,6 +66,13 @@ cleanup_orphaned_resource() {
   fi
 
   kubectl -n "$NAMESPACE" delete "$kind" "$name" --ignore-not-found
+
+  if kubectl -n "$NAMESPACE" get "$kind" "$name" >/dev/null 2>&1; then
+    if ! kubectl -n "$NAMESPACE" wait --for=delete "$kind/$name" --timeout="${wait_seconds}s" >/dev/null 2>&1; then
+      echo "ERROR: timed out waiting for $kind/$name deletion in namespace $NAMESPACE." >&2
+      return 1
+    fi
+  fi
 }
 
 decode_base64() {
