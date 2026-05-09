@@ -114,8 +114,11 @@ if ! helm status "$RELEASE_NAME" -n "$NAMESPACE" >/dev/null 2>&1; then
 fi
 
 if kubectl -n "$NAMESPACE" get secret "$POSTGRESQL_SECRET_NAME" >/dev/null 2>&1; then
-  POSTGRESQL_PASSWORD=$(decode_secret_key "password" "$(get_secret_data_key "password" "{.data.password}")")
-  POSTGRESQL_ADMIN_PASSWORD=$(decode_secret_key "postgres-password" "$(get_secret_data_key "postgres-password" "{.data['postgres-password']}")")
+  secret_password_b64=$(get_secret_data_key "password" "{.data.password}")
+  secret_postgres_password_b64=$(get_secret_data_key "postgres-password" "{.data['postgres-password']}")
+
+  POSTGRESQL_PASSWORD=$(decode_secret_key "password" "$secret_password_b64")
+  POSTGRESQL_ADMIN_PASSWORD=$(decode_secret_key "postgres-password" "$secret_postgres_password_b64")
 fi
 
 HELM_ARGS=(upgrade --install "$RELEASE_NAME" "$CHART_PATH" -n "$NAMESPACE" --create-namespace --wait --timeout 10m)
