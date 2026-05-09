@@ -73,8 +73,8 @@ cleanup_orphaned_resource() {
 
   kubectl -n "$NAMESPACE" delete "$kind" "$name" --ignore-not-found
 
-  if kubectl -n "$NAMESPACE" get "$kind" "$name" >/dev/null 2>&1; then
-    if ! kubectl -n "$NAMESPACE" wait --for=delete "$kind/$name" --timeout="${wait_seconds}s" >/dev/null 2>&1; then
+  if ! kubectl -n "$NAMESPACE" wait --for=delete "$kind/$name" --timeout="${wait_seconds}s" >/dev/null 2>&1; then
+    if kubectl -n "$NAMESPACE" get "$kind" "$name" >/dev/null 2>&1; then
       echo "ERROR: timed out waiting for $kind/$name deletion in namespace $NAMESPACE." >&2
       return 1
     fi
