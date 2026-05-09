@@ -18,6 +18,7 @@ RECOVER_INGRESS_WEBHOOK_CA_ON_TLS_ERROR=${RECOVER_INGRESS_WEBHOOK_CA_ON_TLS_ERRO
 INGRESS_ADMISSION_WEBHOOK_RESOURCE_NAME=${INGRESS_ADMISSION_WEBHOOK_RESOURCE_NAME:-${RELEASE_NAME}-ingress-nginx-admission}
 JENKINS_PVC_NAME=${JENKINS_PVC_NAME:-${RELEASE_NAME}-jenkins}
 POSTGRESQL_PVC_NAME_PREFIX=${POSTGRESQL_PVC_NAME_PREFIX:-data-${POSTGRESQL_RESOURCE_NAME}-}
+INGRESS_VALIDATION_WEBHOOK_NAME=${INGRESS_VALIDATION_WEBHOOK_NAME:-validate.nginx.ingress.kubernetes.io}
 EXTRA_VALUES_FILE=""
 POSTGRESQL_PASSWORD=""
 POSTGRESQL_ADMIN_PASSWORD=""
@@ -257,7 +258,7 @@ cleanup_postgresql_pvcs() {
     return 1
   fi
 
-  pvc_names=$(kubectl -n "$NAMESPACE" get pvc -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null | grep -E "^${POSTGRESQL_PVC_NAME_PREFIX}" || true)
+  pvc_names=$(kubectl -n "$NAMESPACE" get pvc -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null | awk -v prefix="$POSTGRESQL_PVC_NAME_PREFIX" 'index($0, prefix) == 1' || true)
   if [ -z "$pvc_names" ]; then
     return 0
   fi
@@ -433,7 +434,7 @@ if is_truthy "$RECREATE_POSTGRESQL_STATEFULSET_ON_IMMUTABLE_ERROR" \
 fi
 
 if is_truthy "$RECOVER_INGRESS_WEBHOOK_CA_ON_TLS_ERROR" \
-  && grep -Fq 'failed calling webhook "validate.nginx.ingress.kubernetes.io"' "$HELM_OUTPUT_FILE" \
+  && grep -Fq "failed calling webhook \"$INGRESS_VALIDATION_WEBHOOK_NAME\"" "$HELM_OUTPUT_FILE" \
   && grep -Fq "x509: certificate signed by unknown authority" "$HELM_OUTPUT_FILE"; then
   echo "WARN: Detected ingress-nginx admission webhook TLS trust failure." >&2
   echo "WARN: Deleting admission webhook configurations and retrying Helm once." >&2

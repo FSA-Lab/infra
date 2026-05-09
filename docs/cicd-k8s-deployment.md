@@ -63,6 +63,7 @@ Optional flags:
 - `DELETE_POSTGRESQL_PVCS_ON_IMMUTABLE_ERROR` to also delete matching PostgreSQL PVCs before retry when StatefulSet spec is immutable (default `true`)
 - `RECOVER_INGRESS_WEBHOOK_CA_ON_TLS_ERROR` to recover from ingress-nginx admission webhook CA trust failures by deleting stale webhook configs before one retry (default `true`)
 - `INGRESS_ADMISSION_WEBHOOK_RESOURCE_NAME` to override the ingress-nginx admission webhook resource name cleaned up on TLS trust failures (default `${RELEASE_NAME}-ingress-nginx-admission`)
+- `INGRESS_VALIDATION_WEBHOOK_NAME` to override the ingress validation webhook name pattern detected in Helm error output (default `validate.nginx.ingress.kubernetes.io`)
 - `JENKINS_PVC_NAME` to override the Jenkins PVC name used for persistence compatibility overrides during upgrade (default `${RELEASE_NAME}-jenkins`)
 - `POSTGRESQL_PVC_NAME_PREFIX` to control which PostgreSQL PVC names are deleted on immutable StatefulSet retries (default `data-${POSTGRESQL_RESOURCE_NAME}-`)
 
