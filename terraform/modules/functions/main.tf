@@ -165,7 +165,6 @@ resource "azurerm_monitor_diagnostic_setting" "function_app" {
     for_each = data.azurerm_monitor_diagnostic_categories.function_app.metrics
     content {
       category = enabled_metric.value
-      enabled  = true
     }
   }
 
@@ -197,7 +196,6 @@ resource "azurerm_monitor_diagnostic_setting" "storage" {
     for_each = data.azurerm_monitor_diagnostic_categories.storage.metrics
     content {
       category = enabled_metric.value
-      enabled  = true
     }
   }
 
@@ -229,7 +227,6 @@ resource "azurerm_monitor_diagnostic_setting" "servicebus" {
     for_each = data.azurerm_monitor_diagnostic_categories.servicebus.metrics
     content {
       category = enabled_metric.value
-      enabled  = true
     }
   }
 
@@ -261,7 +258,6 @@ resource "azurerm_monitor_diagnostic_setting" "postgres" {
     for_each = data.azurerm_monitor_diagnostic_categories.postgres.metrics
     content {
       category = enabled_metric.value
-      enabled  = true
     }
   }
 
