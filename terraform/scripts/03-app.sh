@@ -15,6 +15,16 @@ terraform init
 
 MAX_APPLY_ATTEMPTS=3
 APPLY_ATTEMPT=1
+APPLY_LOG_FILES=()
+
+cleanup_apply_logs() {
+  local log_file
+  for log_file in "${APPLY_LOG_FILES[@]}"; do
+    [ -n "$log_file" ] && [ -f "$log_file" ] && rm -f "$log_file"
+  done
+}
+
+trap cleanup_apply_logs EXIT
 
 import_from_apply_log() {
   local apply_log=$1
@@ -65,6 +75,7 @@ import_from_apply_log() {
 
 while [ "$APPLY_ATTEMPT" -le "$MAX_APPLY_ATTEMPTS" ]; do
   APPLY_LOG=$(mktemp "/tmp/terraform-functions-apply-${APPLY_ATTEMPT}-XXXXXX.log")
+  APPLY_LOG_FILES+=("$APPLY_LOG")
   echo "INFO: terraform apply attempt ${APPLY_ATTEMPT}/${MAX_APPLY_ATTEMPTS}" >&2
 
   set +e
