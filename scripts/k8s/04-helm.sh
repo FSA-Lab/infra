@@ -12,6 +12,7 @@ VALUES_FILE=${VALUES_FILE:-}
 AKS_RESOURCE_GROUP_NAME=${AKS_RESOURCE_GROUP_NAME:-}
 TMP_BASE=${TMPDIR:-/tmp}
 ORPHAN_CLEANUP_WAIT_SECONDS=${ORPHAN_CLEANUP_WAIT_SECONDS:-60}
+RECREATE_POSTGRESQL_STATEFULSET_ON_IMMUTABLE_ERROR=${RECREATE_POSTGRESQL_STATEFULSET_ON_IMMUTABLE_ERROR:-true}
 EXTRA_VALUES_FILE=""
 POSTGRESQL_PASSWORD=""
 POSTGRESQL_ADMIN_PASSWORD=""
@@ -140,6 +141,18 @@ create_secret_value_file() {
     return 1
   fi
   printf '%s' "$file_path"
+}
+
+is_truthy() {
+  local value=${1:-}
+  case "$value" in
+    [Tt][Rr][Uu][Ee]|1|[Yy][Ee][Ss]|[Yy]|[Oo][Nn])
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
 }
 
 get_keyvault_secret_value() {
@@ -300,4 +313,38 @@ if [ -n "$POSTGRESQL_ADMIN_PASSWORD_FILE" ]; then
   HELM_ARGS+=( --set-file "keycloak.postgresql.auth.postgresPassword=$POSTGRESQL_ADMIN_PASSWORD_FILE" )
 fi
 
-helm "${HELM_ARGS[@]}"
+HELM_OUTPUT_FILE=$(mktemp "${TMP_BASE}/helm-upgrade.XXXXXXXXXX.log")
+
+if helm "${HELM_ARGS[@]}" >"$HELM_OUTPUT_FILE" 2>&1; then
+  cat "$HELM_OUTPUT_FILE"
+  rm -f "$HELM_OUTPUT_FILE"
+  exit 0
+fi
+
+cat "$HELM_OUTPUT_FILE" >&2
+
+if is_truthy "$RECREATE_POSTGRESQL_STATEFULSET_ON_IMMUTABLE_ERROR" \
+  && grep -Fq "cannot patch \"$POSTGRESQL_RESOURCE_NAME\" with kind StatefulSet" "$HELM_OUTPUT_FILE" \
+  && grep -Fq "Forbidden: updates to statefulset spec" "$HELM_OUTPUT_FILE"; then
+  echo "WARN: detected immutable StatefulSet spec change for statefulset/$POSTGRESQL_RESOURCE_NAME; deleting and retrying Helm upgrade once." >&2
+  if ! cleanup_orphaned_resource statefulset "$POSTGRESQL_RESOURCE_NAME"; then
+    echo "ERROR: failed to cleanup statefulset/$POSTGRESQL_RESOURCE_NAME before Helm retry." >&2
+    rm -f "$HELM_OUTPUT_FILE"
+    exit 1
+  fi
+  if ! cleanup_orphaned_resource service "$POSTGRESQL_RESOURCE_NAME"; then
+    echo "ERROR: failed to cleanup service/$POSTGRESQL_RESOURCE_NAME before Helm retry." >&2
+    rm -f "$HELM_OUTPUT_FILE"
+    exit 1
+  fi
+
+  if helm "${HELM_ARGS[@]}"; then
+    rm -f "$HELM_OUTPUT_FILE"
+    exit 0
+  fi
+
+  echo "ERROR: Helm retry after StatefulSet recreation failed." >&2
+fi
+
+rm -f "$HELM_OUTPUT_FILE"
+exit 1
