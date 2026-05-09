@@ -6,6 +6,7 @@ NAMESPACE=${NAMESPACE:-cicd}
 CHART_PATH="$ROOT_DIR/config/helm/cicd-platform"
 RELEASE_NAME=${RELEASE_NAME:-cicd-platform}
 POSTGRESQL_RESOURCE_NAME=${POSTGRESQL_RESOURCE_NAME:-${RELEASE_NAME}-postgresql}
+# Matches cicd-platform values: keycloak.postgresql.auth.existingSecret
 POSTGRESQL_SECRET_NAME=${POSTGRESQL_SECRET_NAME:-keycloak-postgresql}
 VALUES_FILE=${VALUES_FILE:-}
 AKS_RESOURCE_GROUP_NAME=${AKS_RESOURCE_GROUP_NAME:-}
@@ -71,7 +72,7 @@ decode_base64() {
   fi
 
   if ! decoded=$(printf '%s' "$value" | base64 --decode 2>/dev/null); then
-    echo "WARN: failed to decode base64 for key '$label'." >&2
+    echo "WARN: failed to decode base64 for key '$label' (value may be invalid base64, or base64 utility may be unavailable)." >&2
     return 0
   fi
 
@@ -154,10 +155,16 @@ fi
 
 if [ -n "$POSTGRESQL_PASSWORD" ] || [ -n "$POSTGRESQL_ADMIN_PASSWORD" ]; then
   if [ -n "$POSTGRESQL_PASSWORD" ]; then
-    POSTGRESQL_PASSWORD_FILE=$(create_secret_value_file "$POSTGRESQL_PASSWORD")
+    if ! POSTGRESQL_PASSWORD_FILE=$(create_secret_value_file "$POSTGRESQL_PASSWORD"); then
+      echo "ERROR: failed to create temporary file for PostgreSQL user password." >&2
+      exit 1
+    fi
   fi
   if [ -n "$POSTGRESQL_ADMIN_PASSWORD" ]; then
-    POSTGRESQL_ADMIN_PASSWORD_FILE=$(create_secret_value_file "$POSTGRESQL_ADMIN_PASSWORD")
+    if ! POSTGRESQL_ADMIN_PASSWORD_FILE=$(create_secret_value_file "$POSTGRESQL_ADMIN_PASSWORD"); then
+      echo "ERROR: failed to create temporary file for PostgreSQL admin password." >&2
+      exit 1
+    fi
   fi
 fi
 
