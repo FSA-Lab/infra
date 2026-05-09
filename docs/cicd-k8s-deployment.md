@@ -63,7 +63,7 @@ Optional flags:
 
 `04-helm.sh` also performs a preflight cleanup for orphaned Service and StatefulSet named by `POSTGRESQL_RESOURCE_NAME` (default `${RELEASE_NAME}-postgresql`) when Helm release metadata is missing, while skipping resources owned by a different Helm release. When cleanup occurs, the script now waits for deletion completion before proceeding to Helm install/upgrade.
 
-When a Helm upgrade fails due to immutable spec updates on `statefulset/${POSTGRESQL_RESOURCE_NAME}`, `04-helm.sh` can delete and recreate the PostgreSQL StatefulSet (and matching Service) and retry Helm once. PVC data retention during this recovery depends on your storage class and reclaim policy configuration.
+When a Helm upgrade fails due to immutable spec updates on `statefulset/${POSTGRESQL_RESOURCE_NAME}`, `04-helm.sh` can delete and recreate the PostgreSQL StatefulSet (and matching Service) and retry Helm once with `--force`. PVC data retention during this recovery depends on your storage class and reclaim policy configuration.
 
 `04-helm.sh` now enforces durable Keycloak PostgreSQL credentials before Helm upgrade:
 
