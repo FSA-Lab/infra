@@ -45,7 +45,7 @@ cleanup_orphaned_resource() {
   kubectl -n "$NAMESPACE" delete "$kind" "$name" --ignore-not-found
 }
 
-decode_b64() {
+decode_base64() {
   local label=${1:-value}
   local value=${2:-}
   local decoded=""
@@ -55,7 +55,7 @@ decode_b64() {
   fi
 
   if ! decoded=$(printf '%s' "$value" | base64 --decode 2>/dev/null); then
-    echo "WARN: failed to decode base64 for $label from secret/$POSTGRESQL_SECRET_NAME in namespace $NAMESPACE." >&2
+    echo "WARN: failed to decode base64 for key '$label'." >&2
     return 0
   fi
 
@@ -73,7 +73,7 @@ get_secret_data_key() {
   fi
 
   if ! value=$(kubectl -n "$NAMESPACE" get secret "$POSTGRESQL_SECRET_NAME" -o jsonpath="$jsonpath" 2>/dev/null); then
-    echo "WARN: failed to read key '$key' from secret/$POSTGRESQL_SECRET_NAME in namespace $NAMESPACE." >&2
+    echo "WARN: failed to read key '$key' from secret/$POSTGRESQL_SECRET_NAME." >&2
     return 0
   fi
 
@@ -111,8 +111,8 @@ if kubectl -n "$NAMESPACE" get secret "$POSTGRESQL_SECRET_NAME" >/dev/null 2>&1;
   secret_password_b64=$(get_secret_data_key "password" "{.data.password}")
   secret_postgres_password_b64=$(get_secret_data_key "postgres-password" "{.data['postgres-password']}")
 
-  POSTGRESQL_PASSWORD=$(decode_b64 "password" "$secret_password_b64")
-  POSTGRESQL_ADMIN_PASSWORD=$(decode_b64 "postgres-password" "$secret_postgres_password_b64")
+  POSTGRESQL_PASSWORD=$(decode_base64 "password" "$secret_password_b64")
+  POSTGRESQL_ADMIN_PASSWORD=$(decode_base64 "postgres-password" "$secret_postgres_password_b64")
 fi
 
 HELM_ARGS=(upgrade --install "$RELEASE_NAME" "$CHART_PATH" -n "$NAMESPACE" --create-namespace --wait --timeout 10m)
