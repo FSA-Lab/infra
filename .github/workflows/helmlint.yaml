@@ -8,21 +8,39 @@ on:
     branches: [main]
 
 jobs:
-  tflint:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        # os: [ubuntu-latest, macos-latest, windows-latest]
-        os: [ubuntu-latest]
+  helm-lint:
+    runs-on: ubuntu-latest
+
+    env:
+      CHART_DIR: ./config/helm/cicd-platform
 
     steps:
-      - uses: actions/checkout@v4
-        name: Checkout source code
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: azure/setup-helm@v5.0.0
-        # with:
-        #   version: "<version>" # default is latest (stable)
-        id: install
+      - name: Install Helm
+        uses: azure/setup-helm@v4
 
-      - name: Run Helm Lint
-        run: helm lint ./config/helm/cicd-platform
+      - name: Install yq
+        uses: mikefarah/yq@v4
+
+      - name: Add dependency repos
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if yq '.dependencies' "$CHART_DIR/Chart.yaml" >/dev/null 2>&1; then
+            yq -r '.dependencies[] | "\(.name) \(.repository)"' "$CHART_DIR/Chart.yaml" | \
+            while read -r name repo; do
+              echo "Adding repo: $name -> $repo"
+              helm repo add "$name" "$repo"
+            done
+          fi
+
+          helm repo update
+
+      - name: Build dependencies
+        run: helm dependency build "$CHART_DIR"
+
+      - name: Lint chart
+        run: helm lint "$CHART_DIR"
