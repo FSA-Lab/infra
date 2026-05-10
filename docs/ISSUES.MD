@@ -34,3 +34,17 @@ env:
 
 9. K8s resources stuck at "Terminating" state after deletion, preventing the creation of new resources with the same name.
    --> Temporary solution: manually delete the resources using `kubectl delete` with the `--force` and `--grace-period=0` flags.
+   --> Temporary solution 2:
+
+```bash
+kubectl get namespace cicd -o json | jq '.spec.finalizers=[]' | kubectl replace --raw "/api/v1/namespaces/cicd/finalize" -f -
+```
+
+10. Local cluster behaves strangely because nodes are not labeled
+    --> Solution: label nodes with "apps" for deploying microservices, "tools" for deploying tools like Jenkins and "system" for control plane.
+
+```bash
+kubectl label node ccluster-worker workload=tools
+kubectl label node ccluster-worker2 workload=apps
+kubectl label node ccluster-control-plane workload=system
+```
