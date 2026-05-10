@@ -80,17 +80,17 @@ jenkins:
                           image: "jenkins/inbound-agent:jdk17"
 
                         - name: "azure-cli"
-                          image: "mcr.microsoft.com/azure-cli:2.62.0"
+                          image: "mcr.microsoft.com/azure-cli"
                           command: "cat"
                           ttyEnabled: true
 
                         - name: "buildctl"
-                          image: "moby/buildkit:v0.16.0"
+                          image: "moby/buildkit:v0.29.0"
                           command: "cat"
                           ttyEnabled: true
 
                         - name: "trivy"
-                          image: "aquasec/trivy:0.51.2"
+                          image: "aquasec/trivy:0.70.0"
                           command: "cat"
                           ttyEnabled: true
 
@@ -134,11 +134,9 @@ sonarqube:
 
   ingress:
     enabled: true
-    ingressClassName: nginx
     hosts:
-      - sonarqube.cicd.local
-    path: /
-    pathType: Prefix
+      - name: sonarqube.cicd.local
+        path: /
 
   account:
     existingSecret: sonarqube-admin
@@ -166,7 +164,6 @@ keycloak:
 
   postgresql:
     enabled: true
-
     auth:
       username: keycloak
       database: keycloak

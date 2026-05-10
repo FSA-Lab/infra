@@ -2,7 +2,7 @@ apiVersion: v2
 name: cicd-platform
 description: AKS-oriented CI/CD platform stack for Jenkins, SonarQube Community Build, Keycloak, and ingress.
 type: application
-
+icon: https://dummyjson.com/image/150
 version: 0.1.0
 appVersion: "1.0.0"
 
