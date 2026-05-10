@@ -1,0 +1,28 @@
+# On pull request to main, run TFLint
+name: Helm Lint
+
+on:
+  # push:
+  #   branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  tflint:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        # os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout source code
+
+      - uses: azure/setup-helm@v5.0.0
+        # with:
+        #   version: "<version>" # default is latest (stable)
+        id: install
+
+      - name: Run Helm Lint
+        run: helm lint ./config/helm/cicd-platform

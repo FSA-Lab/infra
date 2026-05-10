@@ -31,3 +31,6 @@ env:
    --> Solution: ensure that the plugin cache directory is correctly set up and that the workflow has permission to write to it.
 
 8. Cannot update PostgreSQL StatefulSet in Kubernetes due to "immutable field" error when trying to change the storage class.
+
+9. K8s resources stuck at "Terminating" state after deletion, preventing the creation of new resources with the same name.
+   --> Temporary solution: manually delete the resources using `kubectl delete` with the `--force` and `--grace-period=0` flags.

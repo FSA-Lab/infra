@@ -135,10 +135,8 @@ sonarqube:
   ingress:
     enabled: true
     ingressClassName: nginx
-
     hosts:
       - sonarqube.cicd.local
-
     path: /
     pathType: Prefix
 
