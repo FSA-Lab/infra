@@ -29,13 +29,10 @@ jobs:
         run: |
           set -euo pipefail
 
-          if yq '.dependencies' "$CHART_DIR/Chart.yaml" >/dev/null 2>&1; then
-            yq -r '.dependencies[] | "\(.name) \(.repository)"' "$CHART_DIR/Chart.yaml" | \
-            while read -r name repo; do
-              echo "Adding repo: $name -> $repo"
-              helm repo add "$name" "$repo"
-            done
-          fi
+          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+          helm repo add jenkins https://charts.jenkins.io
+          helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube
+          helm repo add bitnami https://charts.bitnami.com/bitnami
 
           helm repo update
 
