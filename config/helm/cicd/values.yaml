@@ -3,6 +3,25 @@ global:
   security:
     allowInsecureImages: true
 
+################################################################################
+# Secrets
+################################################################################
+secrets:
+  postgresql:
+    password: ""
+    postgresPassword: ""
+
+  keycloak:
+    adminPassword: ""
+
+  jenkins:
+    adminUser: admin
+    adminPassword: ""
+
+    oidc:
+      clientId: jenkins
+      clientSecret: ""
+
 ingress-nginx:
   controller:
     nodeSelector:

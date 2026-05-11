@@ -2,59 +2,43 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: jenkins-agent
-  namespace: cicd
+  namespace: {{ .Release.Namespace }}
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: jenkins-agent-role
+  name: {{ .Release.Name }}-jenkins-agent-role
 
 rules:
   - apiGroups: [""]
-    resources:
-      - pods
-      - pods/log
-      - services
-      - configmaps
-      - secrets
-    verbs:
-      - "*"
+    resources: ["pods", "pods/log", "services", "configmaps", "secrets"]
+    verbs: ["*"]
 
   - apiGroups: ["apps"]
-    resources:
-      - deployments
-      - statefulsets
-      - daemonsets
-    verbs:
-      - "*"
+    resources: ["deployments", "statefulsets", "daemonsets"]
+    verbs: ["*"]
 
   - apiGroups: ["batch"]
-    resources:
-      - jobs
-      - cronjobs
-    verbs:
-      - "*"
+    resources: ["jobs", "cronjobs"]
+    verbs: ["*"]
 
   - apiGroups: [""]
-    resources:
-      - namespaces
-    verbs:
-      - get
-      - list
+    resources: ["namespaces"]
+    verbs: ["get", "list"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: jenkins-agent-binding
+  name: {{ .Release.Name }}-jenkins-agent-binding
 
 subjects:
   - kind: ServiceAccount
     name: jenkins-agent
-    namespace: cicd
+    namespace: {{ .Release.Namespace }}
 
 roleRef:
   kind: ClusterRole
-  name: jenkins-agent-role
+  name: {{ .Release.Name }}-jenkins-agent-role
   apiGroup: rbac.authorization.k8s.io

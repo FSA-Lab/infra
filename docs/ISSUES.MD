@@ -71,3 +71,10 @@ Error: UPGRADE FAILED: unable to continue with update: Namespace "cicd" in names
 ```
 
 Root cause: templates/namespace.yaml creates a namespace that is not managed by Helm.
+
+13. Secrets may leak during pipeline execution.
+    --> Solution
+    - Ensure that secrets are not printed in the logs
+    - Use value files, such as /tmp/values-XXXXXX.yaml (with umask 077, only runner can read file)
+
+14. Jenkins cannot connect to the internet

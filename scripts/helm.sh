@@ -2,5 +2,15 @@
 set -euo pipefail
 
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+CHART_PATH="$ROOT_DIR/config/helm/cicd"
 
-bash "$ROOT_DIR/scripts/k8s/00-deploy-cicd.sh"
+helm upgrade --install cicd "$CHART_PATH" \
+  -n cicd \
+  --create-namespace \
+  --wait \
+  --timeout 15m \
+  --set secrets.postgresql.password="$KEYCLOAK_POSTGRESQL_PASSWORD" \
+  --set secrets.postgresql.postgresPassword="$KEYCLOAK_POSTGRESQL_ADMIN_PASSWORD" \
+  --set secrets.keycloak.adminPassword="$KEYCLOAK_ADMIN_PASSWORD" \
+  --set secrets.jenkins.adminPassword="$JENKINS_ADMIN_PASSWORD" \
+  --set secrets.jenkins.oidc.clientSecret="$JENKINS_OIDC_CLIENT_SECRET"
