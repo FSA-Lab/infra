@@ -23,9 +23,13 @@ secrets:
       clientSecret: ""
 
     proxy:
+      # Example: http://proxy.example.com:8080
       httpProxy: ""
+      # Example: http://proxy.example.com:8080
       httpsProxy: ""
+      # Comma-separated domains/IPs that should bypass proxy.
       noProxy: ""
+      secretName: &jenkinsProxySecretName jenkins-proxy
 
 ingress-nginx:
   controller:
@@ -115,42 +119,42 @@ jenkins:
         name: HTTP_PROXY
         valueFrom:
           secretKeyRef:
-            name: jenkins-proxy
+            name: *jenkinsProxySecretName
             key: http-proxy
             optional: true
       - &jenkinsHttpsProxyEnv
         name: HTTPS_PROXY
         valueFrom:
           secretKeyRef:
-            name: jenkins-proxy
+            name: *jenkinsProxySecretName
             key: https-proxy
             optional: true
       - &jenkinsNoProxyEnv
         name: NO_PROXY
         valueFrom:
           secretKeyRef:
-            name: jenkins-proxy
+            name: *jenkinsProxySecretName
             key: no-proxy
             optional: true
       - &jenkinsHttpProxyEnvLower
         name: http_proxy
         valueFrom:
           secretKeyRef:
-            name: jenkins-proxy
+            name: *jenkinsProxySecretName
             key: http-proxy
             optional: true
       - &jenkinsHttpsProxyEnvLower
         name: https_proxy
         valueFrom:
           secretKeyRef:
-            name: jenkins-proxy
+            name: *jenkinsProxySecretName
             key: https-proxy
             optional: true
       - &jenkinsNoProxyEnvLower
         name: no_proxy
         valueFrom:
           secretKeyRef:
-            name: jenkins-proxy
+            name: *jenkinsProxySecretName
             key: no-proxy
             optional: true
 
