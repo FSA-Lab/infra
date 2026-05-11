@@ -414,6 +414,8 @@ keycloak:
         secretKeyRef:
           name: keycloak-admin
           key: admin-password
+    - name: KC_HOSTNAME
+      value: keycloak.cicd.internal
 
   ingress:
     enabled: true
