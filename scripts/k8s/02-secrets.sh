@@ -1,31 +1,58 @@
 #!/bin/bash
 set -euo pipefail
 
-ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-USE_FALLBACK_SECRETS=${USE_FALLBACK_SECRETS:-false}
-STRICT_PLACEHOLDER_CHECK=${STRICT_PLACEHOLDER_CHECK:-false}
-KEYVAULT_SYNC_REQUIRED=${KEYVAULT_SYNC_REQUIRED:-false}
+NAMESPACE=${NAMESPACE:-cicd}
 
-if grep -q "REPLACE-WITH-YOUR-" "$ROOT_DIR/config/k8s/keyvault-secrets.yaml"; then
-  if [ "$STRICT_PLACEHOLDER_CHECK" = "true" ]; then
-    echo "ERROR: keyvault-secrets.yaml has placeholder workload identity values and STRICT_PLACEHOLDER_CHECK=true." >&2
-    exit 1
-  fi
-  echo "WARN: keyvault-secrets.yaml still has placeholder workload identity values. Update before production." >&2
+# Credentials injected by the CI workflow (GitHub Actions secrets/vars).
+KEYCLOAK_POSTGRESQL_PASSWORD=${KEYCLOAK_POSTGRESQL_PASSWORD:-}
+KEYCLOAK_POSTGRESQL_ADMIN_PASSWORD=${KEYCLOAK_POSTGRESQL_ADMIN_PASSWORD:-}
+KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD:-}
+JENKINS_ADMIN_USER=${JENKINS_ADMIN_USER:-admin}
+JENKINS_ADMIN_PASSWORD=${JENKINS_ADMIN_PASSWORD:-}
+JENKINS_OIDC_CLIENT_ID=${JENKINS_OIDC_CLIENT_ID:-jenkins}
+JENKINS_OIDC_CLIENT_SECRET=${JENKINS_OIDC_CLIENT_SECRET:-}
+
+if [ -z "$KEYCLOAK_POSTGRESQL_PASSWORD" ]; then
+  echo "ERROR: KEYCLOAK_POSTGRESQL_PASSWORD is required." >&2
+  exit 1
+fi
+if [ -z "$KEYCLOAK_POSTGRESQL_ADMIN_PASSWORD" ]; then
+  echo "ERROR: KEYCLOAK_POSTGRESQL_ADMIN_PASSWORD is required." >&2
+  exit 1
+fi
+if [ -z "$KEYCLOAK_ADMIN_PASSWORD" ]; then
+  echo "ERROR: KEYCLOAK_ADMIN_PASSWORD is required." >&2
+  exit 1
+fi
+if [ -z "$JENKINS_ADMIN_PASSWORD" ]; then
+  echo "ERROR: JENKINS_ADMIN_PASSWORD is required." >&2
+  exit 1
 fi
 
-if kubectl get crd secretproviderclasses.secrets-store.csi.x-k8s.io >/dev/null 2>&1; then
-  kubectl apply -f "$ROOT_DIR/config/k8s/keyvault-secrets.yaml"
+upsert_secret() {
+  kubectl -n "$NAMESPACE" create secret generic "$@" \
+    --dry-run=client -o yaml | kubectl apply -f -
+}
+
+# keycloak-postgresql: shared by PostgreSQL chart, Keycloak, and SonarQube JDBC.
+upsert_secret keycloak-postgresql \
+  --from-literal=password="$KEYCLOAK_POSTGRESQL_PASSWORD" \
+  --from-literal=postgres-password="$KEYCLOAK_POSTGRESQL_ADMIN_PASSWORD"
+
+# keycloak-admin: Keycloak admin bootstrap credentials.
+upsert_secret keycloak-admin \
+  --from-literal=admin-password="$KEYCLOAK_ADMIN_PASSWORD"
+
+# jenkins-admin: Jenkins initial admin account.
+upsert_secret jenkins-admin \
+  --from-literal=jenkins-admin-user="$JENKINS_ADMIN_USER" \
+  --from-literal=jenkins-admin-password="$JENKINS_ADMIN_PASSWORD"
+
+# jenkins-oidc: Keycloak OIDC client used by Jenkins JCasC (optional at deploy time).
+if [ -n "$JENKINS_OIDC_CLIENT_SECRET" ]; then
+  upsert_secret jenkins-oidc \
+    --from-literal=client-id="$JENKINS_OIDC_CLIENT_ID" \
+    --from-literal=client-secret="$JENKINS_OIDC_CLIENT_SECRET"
 else
-  if [ "$KEYVAULT_SYNC_REQUIRED" = "true" ]; then
-    echo "ERROR: SecretProviderClass CRD is missing and KEYVAULT_SYNC_REQUIRED=true." >&2
-    echo "Install Secrets Store CSI Driver + Azure provider before deploying Key Vault sync resources." >&2
-    exit 1
-  fi
-  echo "WARN: SecretProviderClass CRD is missing. Skipping keyvault-secrets.yaml apply." >&2
-  echo "Install Secrets Store CSI Driver + Azure provider, or continue with USE_FALLBACK_SECRETS=true." >&2
-fi
-
-if [ "$USE_FALLBACK_SECRETS" = "true" ]; then
-  kubectl apply -f "$ROOT_DIR/config/k8s/seeded-credentials-fallback.yaml"
+  echo "INFO: JENKINS_OIDC_CLIENT_SECRET not set; skipping jenkins-oidc secret creation." >&2
 fi

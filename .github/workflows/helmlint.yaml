@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      CHART_DIR: ./config/helm/cicd-platform
+      CHART_DIR: ./config/helm/cicd
 
     steps:
       - name: Checkout

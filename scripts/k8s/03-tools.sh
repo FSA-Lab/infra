@@ -1,7 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 
-ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-
-kubectl apply -f "$ROOT_DIR/config/k8s/buildkit.yaml"
-kubectl apply -f "$ROOT_DIR/config/k8s/trivy.yaml"
+# BuildKit and Trivy are now deployed as sidecar containers in Jenkins agent pods
+# via the Helm chart (config/helm/cicd/values.yaml). No standalone manifests to apply.
+echo "INFO: BuildKit and Trivy are managed by the Helm chart as Jenkins agent sidecar containers." >&2
