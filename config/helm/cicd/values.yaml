@@ -25,7 +25,7 @@ secrets:
     proxy:
       # Example: http://proxy.example.com:8080
       httpProxy: ""
-      # Example: http://proxy.example.com:8080 (HTTP proxy tunneling HTTPS via CONNECT)
+      # Example: http://proxy.example.com:8080 (uses HTTP to tunnel HTTPS connections)
       httpsProxy: ""
       # Comma-separated domains/IPs that should bypass proxy.
       noProxy: ""
