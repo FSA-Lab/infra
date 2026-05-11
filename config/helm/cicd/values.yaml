@@ -69,6 +69,10 @@ jenkins:
     nodeSelector:
       workload: tools
 
+    image:
+      repository: jenkins/jenkins
+      tag: lts-jdk21
+
     tolerations:
       - key: workload
         operator: Equal
