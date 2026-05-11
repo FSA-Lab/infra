@@ -330,17 +330,13 @@ jenkins:
               oic:
                 clientId: "${KEYCLOAK_CLIENT_ID}"
                 clientSecret: "${KEYCLOAK_CLIENT_SECRET}"
-
-                wellKnownOpenIDConfigurationUrl: "https://keycloak.cicd.internal/realms/cicd/.well-known/openid-configuration"
-
+                serverConfiguration:
+                  wellKnown:
+                    wellKnownOpenIDConfigurationUrl: "https://keycloak.cicd.internal/realms/cicd/.well-known/openid-configuration"
                 userNameField: "preferred_username"
-
                 fullNameFieldName: "name"
-
                 emailFieldName: "email"
-
                 groupsFieldName: "groups"
-
                 disableSslVerification: false
 
             authorizationStrategy:
