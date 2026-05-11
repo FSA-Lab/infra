@@ -116,20 +116,6 @@ jobs:
       - name: Run Terraform Deployment
         run: ./scripts/apply-infra.sh
 
-      # Configure kubectl with AKS credentials from live cluster
-      - name: Configure kubectl with AKS credentials
-        run: |
-          mkdir -p ~/.kube
-          az aks get-credentials \
-            --resource-group "${{ env.TF_VAR_AKS_RESOURCE_GROUP_NAME }}" \
-            --name "${{ env.TF_VAR_AKS_NAME }}" \
-            --file ~/.kube/config \
-            --admin \
-            --overwrite
-        env:
-          # Suppress verbose output to prevent kubeconfig exposure
-          KUBECONFIG: ~/.kube/config
-
       # Run the Helm deployment script
       - name: Run Helm Deployment
         run: ./scripts/helm.sh
