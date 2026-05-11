@@ -106,16 +106,16 @@ jenkins:
     serviceType: ClusterIP
 
     installPlugins:
-      - kubernetes:4296.v20a_7e4d77cf6
-      - configuration-as-code:1810.v9b_c30a_249a_4c
-      - workflow-aggregator:596.v8c21c963d92d
+      - kubernetes
+      - configuration-as-code
+      - workflow-aggregator
       - git
       - credentials-binding
       - pipeline-stage-view
       - blueocean
       - job-dsl
-      - sonar:2.17.2
-      - oic-auth:4.420.v0475fd2a_b_4f4
+      - sonar
+      - oic-auth
 
     # Keep both uppercase and lowercase proxy vars for compatibility across Java, curl, and plugin tooling.
     initContainerEnv:
@@ -161,6 +161,10 @@ jenkins:
             name: jenkins-proxy
             key: no-proxy
             optional: true
+      - name: JENKINS_UC_DOWNLOAD
+        value: "https://sg.mirror.servanamanaged.com/jenkins"
+      - name: JENKINS_UC
+        value: "https://updates.jenkins.io"
 
     containerEnv:
       - *jenkinsHttpProxyEnv
@@ -198,7 +202,7 @@ jenkins:
 
                   namespace: "cicd"
 
-                  jenkinsUrl: "http://jenkins.cicd.svc.cluster.local:8080"
+                  jenkinsUrl: "http://cicd-jenkins.cicd.svc.cluster.local:8080"
 
                   containerCapStr: "20"
 
