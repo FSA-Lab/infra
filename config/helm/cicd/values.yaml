@@ -1,5 +1,7 @@
 global:
   domain: cicd.internal
+  security:
+    allowInsecureImages: true
 
 ingress-nginx:
   controller:
@@ -319,6 +321,10 @@ keycloak:
       operator: Equal
       value: tools
       effect: NoSchedule
+
+  image:
+    repository: keycloak/keycloak
+    tag: 26.3.3-0
 
   auth:
     adminUser: admin

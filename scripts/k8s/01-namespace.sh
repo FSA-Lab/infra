@@ -6,5 +6,6 @@ set -euo pipefail
 # are not tracked by Helm, so no release conflicts arise.
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 
-kubectl apply -f "$ROOT_DIR/config/helm/templates/namespace.yaml"
-kubectl apply -f "$ROOT_DIR/config/helm/templates/rbac.yaml"
+# Disable to prevent Helm conflicts with manually applied namespace.
+# kubectl apply -f "$ROOT_DIR/config/helm/cicd/templates/namespace.yaml"
+kubectl apply -f "$ROOT_DIR/config/helm/cicd/templates/rbac.yaml"

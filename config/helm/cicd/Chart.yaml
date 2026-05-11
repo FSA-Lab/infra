@@ -2,6 +2,7 @@ apiVersion: v2
 name: cicd
 description: Unified CI/CD infrastructure
 type: application
+icon: https://dummyjson.com/image/150
 version: 0.1.0
 
 dependencies:

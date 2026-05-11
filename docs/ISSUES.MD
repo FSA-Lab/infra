@@ -47,4 +47,27 @@ kubectl get namespace cicd -o json | jq '.spec.finalizers=[]' | kubectl replace 
 kubectl label node ccluster-worker workload=tools
 kubectl label node ccluster-worker2 workload=apps
 kubectl label node ccluster-control-plane workload=system
+kubectl taint node ccluster-worker workload=tools:NoSchedule
+kubectl taint node ccluster-worker2 workload=apps:NoSchedule
 ```
+
+11. Some public Helm charts use old versions of images that have been removed from Docker Hub, causing deployment failures.
+    --> Solution: override the image repository and tag in the Helm values file to use a valid image. For example:
+
+```yaml
+keycloak:
+  image:
+    repository: keycloak/keycloak
+    tag: 26.3.3-0
+```
+
+However, this causes another issue: image not valid for deployment (insecure)
+--> Temporary solution: allow insecure images in the cluster by setting `global.allowInsecureImages` to true
+
+12.
+
+```
+Error: UPGRADE FAILED: unable to continue with update: Namespace "cicd" in namespace "" exists and cannot be imported into the current release: invalid ownership metadata; label validation error: missing key "app.kubernetes.io/managed-by": must be set to "Helm"; annotation validation error: missing key "meta.helm.sh/release-name": must be set to "cicd"; annotation validation error: missing key "meta.helm.sh/release-namespace": must be set to "cicd"
+```
+
+Root cause: templates/namespace.yaml creates a namespace that is not managed by Helm.
