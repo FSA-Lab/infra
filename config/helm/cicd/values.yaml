@@ -25,7 +25,7 @@ secrets:
     proxy:
       # Example: http://proxy.example.com:8080
       httpProxy: ""
-      # Example: http://proxy.example.com:8080 (HTTP proxy URL for HTTPS traffic)
+      # Example: http://proxy.example.com:8080 (proxy endpoint for HTTPS traffic)
       httpsProxy: ""
       # Comma-separated domains/IPs that should bypass proxy.
       noProxy: ""
