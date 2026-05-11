@@ -29,6 +29,7 @@ secrets:
       httpsProxy: ""
       # Comma-separated domains/IPs that should bypass proxy.
       noProxy: ""
+      # Shared proxy secret name used by secret template and Jenkins env var references below.
       secretName: &jenkinsProxySecretName jenkins-proxy
 
 ingress-nginx:
@@ -114,6 +115,7 @@ jenkins:
       - sonar:2.17.2
       - oic-auth:4.420.v0475fd2a_b_4f4
 
+    # Keep both uppercase and lowercase proxy vars for compatibility across Java, curl, and plugin tooling.
     initContainerEnv:
       - &jenkinsHttpProxyEnv
         name: HTTP_PROXY
