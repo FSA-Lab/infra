@@ -79,4 +79,6 @@ Root cause: templates/namespace.yaml creates a namespace that is not managed by 
 
 14. Jenkins cannot connect to the internet
     --> Root cause: Jenkins controller/init container had no proxy environment configuration, so plugin downloads fail in restricted egress environments.
-    --> Solution: configure `secrets.jenkins.proxy.{httpProxy,httpsProxy,noProxy}` in `config/helm/cicd/values.yaml`. The chart now creates `secret/jenkins-proxy` and injects proxy env vars (`HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` + lowercase variants) into both Jenkins init and controller containers.
+    --> Solution:
+    - Configure `secrets.jenkins.proxy.{httpProxy,httpsProxy,noProxy}` in `config/helm/cicd/values.yaml`. The chart now creates `secret/jenkins-proxy` and injects proxy env vars (`HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` + lowercase variants) into both Jenkins init and controller containers.
+    - Configure Jenkins update center URLs to use a stable mirror that is accessible to avoid plugin installation failures.
