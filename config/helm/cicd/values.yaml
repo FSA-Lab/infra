@@ -419,7 +419,7 @@ keycloak:
     rules:
       - host: keycloak.cicd.internal
         paths:
-          - path: '{{ tpl .Values.http.relativePath $ | trimSuffix "/" }}/'
+          - path: /auth/
             pathType: Prefix
 
   resources:
