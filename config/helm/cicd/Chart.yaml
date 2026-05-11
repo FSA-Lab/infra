@@ -18,9 +18,10 @@ dependencies:
     version: "2026.2.1"
     repository: "https://SonarSource.github.io/helm-chart-sonarqube"
 
-  - name: keycloak
-    version: "25.2.0"
-    repository: "https://charts.bitnami.com/bitnami"
+  - name: keycloak-chart
+    alias: keycloak
+    version: "7.1.11"
+    repository: "oci://dhi.io"
 
   # This one is to prevent conflicts with the postgresql dependency of sonarqube and keycloak
   - name: postgresql
