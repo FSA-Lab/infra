@@ -22,6 +22,11 @@ secrets:
       clientId: jenkins
       clientSecret: ""
 
+    proxy:
+      httpProxy: ""
+      httpsProxy: ""
+      noProxy: ""
+
 ingress-nginx:
   controller:
     nodeSelector:
@@ -105,7 +110,81 @@ jenkins:
       - sonar:2.17.2
       - oic-auth:4.420.v0475fd2a_b_4f4
 
+    initContainerEnv:
+      - name: HTTP_PROXY
+        valueFrom:
+          secretKeyRef:
+            name: jenkins-proxy
+            key: http-proxy
+            optional: true
+      - name: HTTPS_PROXY
+        valueFrom:
+          secretKeyRef:
+            name: jenkins-proxy
+            key: https-proxy
+            optional: true
+      - name: NO_PROXY
+        valueFrom:
+          secretKeyRef:
+            name: jenkins-proxy
+            key: no-proxy
+            optional: true
+      - name: http_proxy
+        valueFrom:
+          secretKeyRef:
+            name: jenkins-proxy
+            key: http-proxy
+            optional: true
+      - name: https_proxy
+        valueFrom:
+          secretKeyRef:
+            name: jenkins-proxy
+            key: https-proxy
+            optional: true
+      - name: no_proxy
+        valueFrom:
+          secretKeyRef:
+            name: jenkins-proxy
+            key: no-proxy
+            optional: true
+
     containerEnv:
+      - name: HTTP_PROXY
+        valueFrom:
+          secretKeyRef:
+            name: jenkins-proxy
+            key: http-proxy
+            optional: true
+      - name: HTTPS_PROXY
+        valueFrom:
+          secretKeyRef:
+            name: jenkins-proxy
+            key: https-proxy
+            optional: true
+      - name: NO_PROXY
+        valueFrom:
+          secretKeyRef:
+            name: jenkins-proxy
+            key: no-proxy
+            optional: true
+      - name: http_proxy
+        valueFrom:
+          secretKeyRef:
+            name: jenkins-proxy
+            key: http-proxy
+            optional: true
+      - name: https_proxy
+        valueFrom:
+          secretKeyRef:
+            name: jenkins-proxy
+            key: https-proxy
+            optional: true
+      - name: no_proxy
+        valueFrom:
+          secretKeyRef:
+            name: jenkins-proxy
+            key: no-proxy
+            optional: true
       - name: KEYCLOAK_CLIENT_ID
         valueFrom:
           secretKeyRef:
