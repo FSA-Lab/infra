@@ -403,6 +403,8 @@ keycloak:
   image:
     repository: quay.io/keycloak/keycloak
     tag: 26.3.3
+  args:
+    - start
 
   extraEnv: |
     - name: KEYCLOAK_ADMIN
