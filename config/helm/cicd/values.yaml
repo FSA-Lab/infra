@@ -401,18 +401,26 @@ keycloak:
       effect: NoSchedule
 
   image:
-    repository: keycloak/keycloak
-    tag: 26.3.3-0
+    repository: quay.io/keycloak/keycloak
+    tag: 26.3.3
 
-  auth:
-    adminUser: admin
-    existingSecret: keycloak-admin
-    passwordSecretKey: admin-password
+  extraEnv: |
+    - name: KEYCLOAK_ADMIN
+      value: admin
+    - name: KEYCLOAK_ADMIN_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: keycloak-admin
+          key: admin-password
 
   ingress:
     enabled: true
     ingressClassName: nginx
-    hostname: keycloak.cicd.internal
+    rules:
+      - host: keycloak.cicd.internal
+        paths:
+          - path: '{{ tpl .Values.http.relativePath $ | trimSuffix "/" }}/'
+            pathType: Prefix
 
   resources:
     requests:
@@ -423,16 +431,14 @@ keycloak:
       cpu: 2
       memory: 4Gi
 
-  postgresql:
-    enabled: false
-
-  externalDatabase:
-    host: postgres
+  database:
+    vendor: postgres
+    hostname: postgres
     port: 5432
     database: keycloak
-    user: keycloak
+    username: keycloak
     existingSecret: keycloak-postgresql
-    existingSecretPasswordKey: password
+    existingSecretKey: password
 
 ################################################################################
 # POSTGRESQL
