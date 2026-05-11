@@ -40,7 +40,7 @@ resource "azurerm_storage_account" "this" {
 resource "azurerm_servicebus_namespace" "this" {
   name                = var.FUNCTIONS_SERVICEBUS_NAMESPACE_NAME
   location            = var.FUNCTIONS_LOCATION
-  resource_group_name = var.FUNCTIONS_RESOURCE_GROUP_NAME
+  resource_group_name = azurerm_resource_group.this.name
   sku                 = var.FUNCTIONS_SERVICEBUS_SKU
 
   tags = var.FUNCTIONS_TAGS
@@ -59,7 +59,7 @@ resource "azurerm_service_plan" "this" {
   location            = var.FUNCTIONS_LOCATION
   name                = var.FUNCTIONS_SERVICE_PLAN_NAME
   sku_name            = var.FUNCTIONS_SKU_NAME
-  resource_group_name = var.FUNCTIONS_RESOURCE_GROUP_NAME
+  resource_group_name = azurerm_resource_group.this.name
 }
 
 resource "azurerm_postgresql_flexible_server" "this" {
@@ -76,6 +76,10 @@ resource "azurerm_postgresql_flexible_server" "this" {
   public_network_access_enabled = var.FUNCTIONS_POSTGRES_PUBLIC_NETWORK_ACCESS_ENABLED
 
   tags = var.FUNCTIONS_TAGS
+
+  lifecycle {
+    ignore_changes = [zone]
+  }
 }
 
 resource "azurerm_postgresql_flexible_server_database" "this" {
@@ -107,7 +111,7 @@ resource "azurerm_postgresql_flexible_server_firewall_rule" "custom" {
 resource "azurerm_linux_function_app" "this" {
   name                = var.FUNCTIONS_FUNCTION_APP_NAME
   location            = var.FUNCTIONS_LOCATION
-  resource_group_name = var.FUNCTIONS_RESOURCE_GROUP_NAME
+  resource_group_name = azurerm_resource_group.this.name
   service_plan_id     = azurerm_service_plan.this.id
 
   storage_account_name       = azurerm_storage_account.this.name
@@ -133,6 +137,12 @@ resource "azurerm_linux_function_app" "this" {
   site_config {
 
   }
+
+  lifecycle {
+    ignore_changes = [
+      site_config[0].application_insights_connection_string
+    ]
+  }
 }
 
 data "azurerm_monitor_diagnostic_categories" "function_app" {
@@ -151,12 +161,18 @@ resource "azurerm_monitor_diagnostic_setting" "function_app" {
     }
   }
 
-  dynamic "metric" {
+  dynamic "enabled_metric" {
     for_each = data.azurerm_monitor_diagnostic_categories.function_app.metrics
     content {
-      category = metric.value
-      enabled  = true
+      category = enabled_metric.value
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      enabled_log,
+      enabled_metric
+    ]
   }
 }
 
@@ -176,12 +192,18 @@ resource "azurerm_monitor_diagnostic_setting" "storage" {
     }
   }
 
-  dynamic "metric" {
+  dynamic "enabled_metric" {
     for_each = data.azurerm_monitor_diagnostic_categories.storage.metrics
     content {
-      category = metric.value
-      enabled  = true
+      category = enabled_metric.value
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      enabled_log,
+      enabled_metric
+    ]
   }
 }
 
@@ -201,12 +223,18 @@ resource "azurerm_monitor_diagnostic_setting" "servicebus" {
     }
   }
 
-  dynamic "metric" {
+  dynamic "enabled_metric" {
     for_each = data.azurerm_monitor_diagnostic_categories.servicebus.metrics
     content {
-      category = metric.value
-      enabled  = true
+      category = enabled_metric.value
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      enabled_log,
+      enabled_metric
+    ]
   }
 }
 
@@ -226,11 +254,17 @@ resource "azurerm_monitor_diagnostic_setting" "postgres" {
     }
   }
 
-  dynamic "metric" {
+  dynamic "enabled_metric" {
     for_each = data.azurerm_monitor_diagnostic_categories.postgres.metrics
     content {
-      category = metric.value
-      enabled  = true
+      category = enabled_metric.value
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      enabled_log,
+      enabled_metric
+    ]
   }
 }

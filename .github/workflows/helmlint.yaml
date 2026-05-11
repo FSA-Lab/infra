@@ -1,0 +1,43 @@
+# On pull request to main, run TFLint
+name: Helm Lint
+
+on:
+  # push:
+  #   branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  helm-lint:
+    runs-on: ubuntu-latest
+
+    env:
+      CHART_DIR: ./config/helm/cicd
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Install yq
+        uses: mikefarah/yq@v4
+
+      - name: Add dependency repos
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+          helm repo add jenkins https://charts.jenkins.io
+          helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+
+          helm repo update
+
+      - name: Build dependencies
+        run: helm dependency build "$CHART_DIR"
+
+      - name: Lint chart
+        run: helm lint "$CHART_DIR"

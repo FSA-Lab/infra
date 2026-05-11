@@ -4,3 +4,14 @@
 *.local/
 
 *.env
+
+
+# Helm chart output directories
+charts/
+*.tgz
+
+# Logs and temporary files
+logs/
+tmp/
+*.log
+*.tmp

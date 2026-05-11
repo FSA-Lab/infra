@@ -29,3 +29,52 @@ env:
 
 7. Despite adding terraform plugin cache configuration in the workflow file, the cache is not being utilized, leading to longer execution times.
    --> Solution: ensure that the plugin cache directory is correctly set up and that the workflow has permission to write to it.
+
+8. Cannot update PostgreSQL StatefulSet in Kubernetes due to "immutable field" error when trying to change the storage class.
+
+9. K8s resources stuck at "Terminating" state after deletion, preventing the creation of new resources with the same name.
+   --> Temporary solution: manually delete the resources using `kubectl delete` with the `--force` and `--grace-period=0` flags.
+   --> Temporary solution 2:
+
+```bash
+kubectl get namespace cicd -o json | jq '.spec.finalizers=[]' | kubectl replace --raw "/api/v1/namespaces/cicd/finalize" -f -
+```
+
+10. Local cluster behaves strangely because nodes are not labeled
+    --> Solution: label nodes with "apps" for deploying microservices, "tools" for deploying tools like Jenkins and "system" for control plane.
+
+```bash
+kubectl label node ccluster-worker workload=tools
+kubectl label node ccluster-worker2 workload=apps
+kubectl label node ccluster-control-plane workload=system
+kubectl taint node ccluster-worker workload=tools:NoSchedule
+kubectl taint node ccluster-worker2 workload=apps:NoSchedule
+```
+
+11. Some public Helm charts use old versions of images that have been removed from Docker Hub, causing deployment failures.
+    --> Solution: override the image repository and tag in the Helm values file to use a valid image. For example:
+
+```yaml
+keycloak:
+  image:
+    repository: keycloak/keycloak
+    tag: 26.3.3-0
+```
+
+However, this causes another issue: image not valid for deployment (insecure)
+--> Temporary solution: allow insecure images in the cluster by setting `global.allowInsecureImages` to true
+
+12.
+
+```
+Error: UPGRADE FAILED: unable to continue with update: Namespace "cicd" in namespace "" exists and cannot be imported into the current release: invalid ownership metadata; label validation error: missing key "app.kubernetes.io/managed-by": must be set to "Helm"; annotation validation error: missing key "meta.helm.sh/release-name": must be set to "cicd"; annotation validation error: missing key "meta.helm.sh/release-namespace": must be set to "cicd"
+```
+
+Root cause: templates/namespace.yaml creates a namespace that is not managed by Helm.
+
+13. Secrets may leak during pipeline execution.
+    --> Solution
+    - Ensure that secrets are not printed in the logs
+    - Use value files, such as /tmp/values-XXXXXX.yaml (with umask 077, only runner can read file)
+
+14. Jenkins cannot connect to the internet

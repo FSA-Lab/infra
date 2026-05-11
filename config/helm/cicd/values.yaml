@@ -1,0 +1,409 @@
+global:
+  domain: cicd.internal
+  security:
+    allowInsecureImages: true
+
+################################################################################
+# Secrets
+################################################################################
+secrets:
+  postgresql:
+    password: ""
+    postgresPassword: ""
+
+  keycloak:
+    adminPassword: ""
+
+  jenkins:
+    adminUser: admin
+    adminPassword: ""
+
+    oidc:
+      clientId: jenkins
+      clientSecret: ""
+
+ingress-nginx:
+  controller:
+    nodeSelector:
+      workload: tools
+
+    tolerations:
+      - key: workload
+        operator: Equal
+        value: tools
+        effect: NoSchedule
+
+    admissionWebhooks:
+      failurePolicy: Ignore
+
+      patch:
+        nodeSelector:
+          workload: tools
+
+        tolerations:
+          - key: workload
+            operator: Equal
+            value: tools
+            effect: NoSchedule
+
+    service:
+      annotations:
+        service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: /healthz
+
+      externalTrafficPolicy: Local
+
+################################################################################
+# JENKINS
+################################################################################
+
+jenkins:
+  controller:
+    nodeSelector:
+      workload: tools
+
+    tolerations:
+      - key: workload
+        operator: Equal
+        value: tools
+        effect: NoSchedule
+
+    admin:
+      existingSecret: jenkins-admin
+      userKey: jenkins-admin-user
+      passwordKey: jenkins-admin-password
+
+    persistence:
+      enabled: true
+      storageClass: managed-csi
+      size: 50Gi
+
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+
+      limits:
+        cpu: 2
+        memory: 4Gi
+
+    ingress:
+      enabled: true
+      ingressClassName: nginx
+      hostName: jenkins.cicd.internal
+
+    serviceType: ClusterIP
+
+    installPlugins:
+      - kubernetes:4296.v20a_7e4d77cf6
+      - configuration-as-code:1810.v9b_c30a_249a_4c
+      - workflow-aggregator:596.v8c21c963d92d
+      - git
+      - credentials-binding
+      - pipeline-stage-view
+      - blueocean
+      - job-dsl
+      - sonar:2.17.2
+      - oic-auth:4.420.v0475fd2a_b_4f4
+
+    containerEnv:
+      - name: KEYCLOAK_CLIENT_ID
+        valueFrom:
+          secretKeyRef:
+            name: jenkins-oidc
+            key: client-id
+
+      - name: KEYCLOAK_CLIENT_SECRET
+        valueFrom:
+          secretKeyRef:
+            name: jenkins-oidc
+            key: client-secret
+
+    JCasC:
+      defaultConfig: false
+
+      configScripts:
+        security-and-clouds: |
+          jenkins:
+
+            numExecutors: 0
+
+            clouds:
+
+              - kubernetes:
+
+                  name: "kubernetes"
+
+                  namespace: "cicd"
+
+                  jenkinsUrl: "http://jenkins.cicd.svc.cluster.local:8080"
+
+                  containerCapStr: "20"
+
+                  retentionTimeout: 5
+
+                  webSocket: true
+
+                  directConnection: true
+
+                  templates:
+
+                    - name: "cicd-agent"
+
+                      namespace: "cicd"
+
+                      label: "cicd-agent"
+
+                      nodeUsageMode: NORMAL
+
+                      serviceAccount: "jenkins-agent"
+
+                      yaml: |
+                        apiVersion: v1
+                        kind: Pod
+
+                        metadata:
+                          labels:
+                            app: jenkins-agent
+
+                        spec:
+
+                          serviceAccountName: jenkins-agent
+
+                          restartPolicy: Never
+
+                          nodeSelector:
+                            workload: tools
+
+                          tolerations:
+                            - key: workload
+                              operator: Equal
+                              value: tools
+                              effect: NoSchedule
+
+                          containers:
+
+                            - name: jnlp
+                              image: jenkins/inbound-agent:jdk17
+                              resources:
+                                requests:
+                                  cpu: "250m"
+                                  memory: "512Mi"
+
+                            - name: buildkit
+                              image: moby/buildkit:v0.29.0-rootless
+                              securityContext:
+                                privileged: true
+                              command:
+                                - sh
+                                - -c
+                                - |
+                                  buildkitd \
+                                    --addr unix:///run/buildkit/buildkitd.sock
+
+                              volumeMounts:
+                                - name: buildkit-socket
+                                  mountPath: /run/buildkit
+
+                                - name: docker-config
+                                  mountPath: /root/.docker
+
+                            - name: trivy
+                              image: aquasec/trivy:0.70.0
+                              command:
+                                - cat
+                              tty: true
+
+                            - name: kubectl
+                              image: bitnami/kubectl:1.33
+                              command:
+                                - cat
+                              tty: true
+
+                            - name: helm
+                              image: alpine/helm:3.18.0
+                              command:
+                                - cat
+                              tty: true
+
+                            - name: azure-cli
+                              image: mcr.microsoft.com/azure-cli
+                              command:
+                                - cat
+                              tty: true
+
+                              env:
+                                - name: AZURE_CLIENT_ID
+                                  valueFrom:
+                                    secretKeyRef:
+                                      name: azure-sp
+                                      key: client-id
+
+                                - name: AZURE_CLIENT_SECRET
+                                  valueFrom:
+                                    secretKeyRef:
+                                      name: azure-sp
+                                      key: client-secret
+
+                                - name: AZURE_TENANT_ID
+                                  valueFrom:
+                                    secretKeyRef:
+                                      name: azure-sp
+                                      key: tenant-id
+
+                          volumes:
+
+                            - name: buildkit-socket
+                              emptyDir: {}
+
+                            - name: docker-config
+                              secret:
+                                secretName: acr-creds
+
+            securityRealm:
+              oic:
+                clientId: "${KEYCLOAK_CLIENT_ID}"
+                clientSecret: "${KEYCLOAK_CLIENT_SECRET}"
+
+                wellKnownOpenIDConfigurationUrl: "https://keycloak.cicd.internal/realms/cicd/.well-known/openid-configuration"
+
+                userNameField: "preferred_username"
+
+                fullNameFieldName: "name"
+
+                emailFieldName: "email"
+
+                groupsFieldName: "groups"
+
+                disableSslVerification: false
+
+            authorizationStrategy:
+              loggedInUsersCanDoAnything:
+                allowAnonymousRead: false
+
+################################################################################
+# SONARQUBE
+################################################################################
+
+sonarqube:
+  community:
+    enabled: true
+
+  monitoringPasscode: "change-me"
+
+  nodeSelector:
+    workload: tools
+
+  tolerations:
+    - key: workload
+      operator: Equal
+      value: tools
+      effect: NoSchedule
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 2Gi
+
+    limits:
+      cpu: 2
+      memory: 4Gi
+
+  ingress:
+    enabled: true
+
+    ingressClassName: nginx
+
+    hosts:
+      - name: sonarqube.cicd.internal
+        path: /
+
+  postgresql:
+    enabled: false
+
+  jdbcOverwrite:
+    enabled: true
+    jdbcUrl: "jdbc:postgresql://postgres:5432/keycloak"
+    jdbcUsername: "keycloak"
+    jdbcSecretName: "keycloak-postgresql"
+    jdbcSecretPasswordKey: password
+
+################################################################################
+# KEYCLOAK
+################################################################################
+
+keycloak:
+  nodeSelector:
+    workload: tools
+
+  tolerations:
+    - key: workload
+      operator: Equal
+      value: tools
+      effect: NoSchedule
+
+  image:
+    repository: keycloak/keycloak
+    tag: 26.3.3-0
+
+  auth:
+    adminUser: admin
+    existingSecret: keycloak-admin
+    passwordSecretKey: admin-password
+
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hostname: keycloak.cicd.internal
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+
+    limits:
+      cpu: 2
+      memory: 4Gi
+
+  postgresql:
+    enabled: false
+
+  externalDatabase:
+    host: postgres
+    port: 5432
+    database: keycloak
+    user: keycloak
+    existingSecret: keycloak-postgresql
+    existingSecretPasswordKey: password
+
+################################################################################
+# POSTGRESQL
+################################################################################
+
+postgresql:
+  enabled: true
+
+  fullnameOverride: postgres
+
+  auth:
+    existingSecret: keycloak-postgresql
+    secretKeys:
+      adminPasswordKey: postgres-password
+      userPasswordKey: password
+
+    username: keycloak
+    database: keycloak
+
+  primary:
+    persistence:
+      enabled: true
+      storageClass: standard
+      size: 20Gi
+
+    nodeSelector:
+      workload: tools
+
+    tolerations:
+      - key: workload
+        operator: Equal
+        value: tools
+        effect: NoSchedule

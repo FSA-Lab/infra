@@ -3,11 +3,19 @@ name: Terraform Deploy
 on:
   push:
     branches: [main]
+  # pull_request:
+  #   branches: [main]
 
 jobs:
   terraform-deploy:
     runs-on: ubuntu-latest
     env:
+      KEYCLOAK_POSTGRESQL_PASSWORD: ${{ secrets.KEYCLOAK_POSTGRESQL_PASSWORD }}
+      KEYCLOAK_POSTGRESQL_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_POSTGRESQL_ADMIN_PASSWORD }}
+      KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
+      JENKINS_ADMIN_PASSWORD: ${{ secrets.JENKINS_ADMIN_PASSWORD }}
+      JENKINS_OIDC_CLIENT_SECRET: ${{ secrets.JENKINS_OIDC_CLIENT_SECRET }}
+      SONARQUBE_MONITORING_PASSCODE: ${{ secrets.SONARQUBE_MONITORING_PASSCODE }}
       TF_PLUGIN_CACHE_DIR: ${{ github.workspace }}/.terraform.d/plugin-cache
       TF_VAR_AKS_APPS_NODE_COUNT: ${{ vars.TF_VAR_AKS_APPS_NODE_COUNT }}
       TF_VAR_AKS_APPS_VM_SIZE: ${{ vars.TF_VAR_AKS_APPS_VM_SIZE }}
