@@ -22,6 +22,14 @@ secrets:
       clientId: jenkins
       clientSecret: ""
 
+    proxy:
+      # Example: http://proxy.example.com:8080
+      httpProxy: ""
+      # Example: http://proxy.example.com:8080 (proxy endpoint for HTTPS traffic)
+      httpsProxy: ""
+      # Comma-separated domains/IPs that should bypass proxy.
+      noProxy: ""
+
 ingress-nginx:
   controller:
     nodeSelector:
@@ -61,6 +69,10 @@ jenkins:
     nodeSelector:
       workload: tools
 
+    image:
+      repository: jenkins/jenkins
+      tag: lts-jdk21
+
     tolerations:
       - key: workload
         operator: Equal
@@ -94,18 +106,73 @@ jenkins:
     serviceType: ClusterIP
 
     installPlugins:
-      - kubernetes:4296.v20a_7e4d77cf6
-      - configuration-as-code:1810.v9b_c30a_249a_4c
-      - workflow-aggregator:596.v8c21c963d92d
+      - kubernetes
+      - configuration-as-code
+      - workflow-aggregator
       - git
       - credentials-binding
       - pipeline-stage-view
       - blueocean
       - job-dsl
-      - sonar:2.17.2
-      - oic-auth:4.420.v0475fd2a_b_4f4
+      - sonar
+      - oic-auth
+
+    # Keep both uppercase and lowercase proxy vars for compatibility across Java, curl, and plugin tooling.
+    initContainerEnv:
+      - &jenkinsHttpProxyEnv
+        name: HTTP_PROXY
+        valueFrom:
+          secretKeyRef:
+            name: jenkins-proxy
+            key: http-proxy
+            optional: true
+      - &jenkinsHttpsProxyEnv
+        name: HTTPS_PROXY
+        valueFrom:
+          secretKeyRef:
+            name: jenkins-proxy
+            key: https-proxy
+            optional: true
+      - &jenkinsNoProxyEnv
+        name: NO_PROXY
+        valueFrom:
+          secretKeyRef:
+            name: jenkins-proxy
+            key: no-proxy
+            optional: true
+      - &jenkinsHttpProxyEnvLower
+        name: http_proxy
+        valueFrom:
+          secretKeyRef:
+            name: jenkins-proxy
+            key: http-proxy
+            optional: true
+      - &jenkinsHttpsProxyEnvLower
+        name: https_proxy
+        valueFrom:
+          secretKeyRef:
+            name: jenkins-proxy
+            key: https-proxy
+            optional: true
+      - &jenkinsNoProxyEnvLower
+        name: no_proxy
+        valueFrom:
+          secretKeyRef:
+            name: jenkins-proxy
+            key: no-proxy
+            optional: true
+      - name: JENKINS_UC_DOWNLOAD
+        value: "https://sg.mirror.servanamanaged.com/jenkins"
+      - name: JENKINS_UC
+        value: "https://updates.jenkins.io"
 
     containerEnv:
+      - *jenkinsHttpProxyEnv
+      - *jenkinsHttpsProxyEnv
+      - *jenkinsNoProxyEnv
+      - *jenkinsHttpProxyEnvLower
+      - *jenkinsHttpsProxyEnvLower
+      - *jenkinsNoProxyEnvLower
       - name: KEYCLOAK_CLIENT_ID
         valueFrom:
           secretKeyRef:
@@ -135,7 +202,7 @@ jenkins:
 
                   namespace: "cicd"
 
-                  jenkinsUrl: "http://jenkins.cicd.svc.cluster.local:8080"
+                  jenkinsUrl: "http://cicd-jenkins.cicd.svc.cluster.local:8080"
 
                   containerCapStr: "20"
 
@@ -263,17 +330,13 @@ jenkins:
               oic:
                 clientId: "${KEYCLOAK_CLIENT_ID}"
                 clientSecret: "${KEYCLOAK_CLIENT_SECRET}"
-
-                wellKnownOpenIDConfigurationUrl: "https://keycloak.cicd.internal/realms/cicd/.well-known/openid-configuration"
-
+                serverConfiguration:
+                  wellKnown:
+                    wellKnownOpenIDConfigurationUrl: "https://keycloak.cicd.internal/realms/cicd/.well-known/openid-configuration"
                 userNameField: "preferred_username"
-
                 fullNameFieldName: "name"
-
                 emailFieldName: "email"
-
                 groupsFieldName: "groups"
-
                 disableSslVerification: false
 
             authorizationStrategy:
@@ -342,18 +405,30 @@ keycloak:
       effect: NoSchedule
 
   image:
-    repository: keycloak/keycloak
-    tag: 26.3.3-0
+    repository: quay.io/keycloak/keycloak
+    tag: 26.3.3
+  args:
+    - start
 
-  auth:
-    adminUser: admin
-    existingSecret: keycloak-admin
-    passwordSecretKey: admin-password
+  extraEnv: |
+    - name: KEYCLOAK_ADMIN
+      value: admin
+    - name: KEYCLOAK_ADMIN_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: keycloak-admin
+          key: admin-password
+    - name: KC_HOSTNAME
+      value: keycloak.cicd.internal
 
   ingress:
     enabled: true
     ingressClassName: nginx
-    hostname: keycloak.cicd.internal
+    rules:
+      - host: keycloak.cicd.internal
+        paths:
+          - path: /auth/
+            pathType: Prefix
 
   resources:
     requests:
@@ -364,16 +439,14 @@ keycloak:
       cpu: 2
       memory: 4Gi
 
-  postgresql:
-    enabled: false
-
-  externalDatabase:
-    host: postgres
+  database:
+    vendor: postgres
+    hostname: postgres
     port: 5432
     database: keycloak
-    user: keycloak
+    username: keycloak
     existingSecret: keycloak-postgresql
-    existingSecretPasswordKey: password
+    existingSecretKey: password
 
 ################################################################################
 # POSTGRESQL
