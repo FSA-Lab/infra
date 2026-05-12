@@ -54,8 +54,12 @@ external-dns:
   registry: txt
   txtOwnerId: cicd
 
-  cloudflare:
-    secretName: cloudflare-provider-credentials
+  env:
+    - name: CF_API_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: cloudflare-provider-credentials
+          key: api-token
 
   sources:
     - service
