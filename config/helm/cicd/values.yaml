@@ -139,7 +139,13 @@ jenkins:
     ingress:
       enabled: true
       ingressClassName: nginx
-      hostName: jenkins.cicd.internal
+      hostName: "jenkins.{{ .Values.global.domain }}"
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+      tls:
+        - hosts:
+            - "jenkins.{{ .Values.global.domain }}"
+          secretName: jenkins-tls
 
     serviceType: ClusterIP
 
@@ -370,7 +376,7 @@ jenkins:
                 clientSecret: "${KEYCLOAK_CLIENT_SECRET}"
                 serverConfiguration:
                   wellKnown:
-                    wellKnownOpenIDConfigurationUrl: "https://keycloak.cicd.internal/realms/cicd/.well-known/openid-configuration"
+                    wellKnownOpenIDConfigurationUrl: "https://keycloak.{{ .Values.global.domain }}/realms/cicd/.well-known/openid-configuration"
                 userNameField: "preferred_username"
                 fullNameFieldName: "name"
                 emailFieldName: "email"
@@ -413,10 +419,16 @@ sonarqube:
     enabled: true
 
     ingressClassName: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-cloudflare
 
     hosts:
       - name: sonarqube.cicd.internal
         path: /
+    tls:
+      - secretName: sonarqube-tls
+        hosts:
+          - sonarqube.cicd.internal
 
   postgresql:
     enabled: false
@@ -457,16 +469,22 @@ keycloak:
           name: keycloak-admin
           key: admin-password
     - name: KC_HOSTNAME
-      value: keycloak.cicd.internal
+      value: keycloak.{{ .Values.global.domain }}
 
   ingress:
     enabled: true
     ingressClassName: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-cloudflare
     rules:
-      - host: keycloak.cicd.internal
+      - host: keycloak.{{ .Values.global.domain }}
         paths:
           - path: /auth/
             pathType: Prefix
+    tls:
+      - hosts:
+          - keycloak.{{ .Values.global.domain }}
+        secretName: keycloak-tls
 
   resources:
     requests:

@@ -86,6 +86,9 @@ helm upgrade --install cicd "$CHART_PATH" \
   --set certManagerConfig.clusterIssuer.email="$CERT_MANAGER_EMAIL" \
   --set external-dns.domainFilters[0]="$DNS_ROOT" \
   --set-json 'external-dns.fqdnTemplates=["{{.Name}}.'"${DNS_ROOT}"'"]' \
+  --set jenkins.controller.ingress.hostName="jenkins.${DNS_ROOT}" \
+  --set sonarqube.ingress.hosts[0].name="sonarqube.${DNS_ROOT}" \
+  --set sonarqube.ingress.tls[0].hosts[0]="sonarqube.${DNS_ROOT}" \
   --set secrets.postgresql.password="$KEYCLOAK_POSTGRESQL_PASSWORD" \
   --set secrets.postgresql.postgresPassword="$KEYCLOAK_POSTGRESQL_ADMIN_PASSWORD" \
   --set secrets.keycloak.adminPassword="$KEYCLOAK_ADMIN_PASSWORD" \
