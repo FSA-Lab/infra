@@ -82,3 +82,5 @@ Root cause: templates/namespace.yaml creates a namespace that is not managed by 
     --> Solution:
     - Configure `secrets.jenkins.proxy.{httpProxy,httpsProxy,noProxy}` in `config/helm/cicd/values.yaml`. The chart now creates `secret/jenkins-proxy` and injects proxy env vars (`HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` + lowercase variants) into both Jenkins init and controller containers.
     - Configure Jenkins update center URLs to use a stable mirror that is accessible to avoid plugin installation failures.
+15. Storage class "standard" is not available in AKS
+    --> Solution: use "default" or "managed-csi" storage class instead, which is available in AKS. Update `primary.persistence.storageClass` in `config/helm/cicd/values.yaml` to "default".

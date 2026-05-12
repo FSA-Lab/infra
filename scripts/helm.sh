@@ -23,7 +23,7 @@ if [[ -n "${TF_VAR_AKS_NAME:-}" && -n "${TF_VAR_AKS_RESOURCE_GROUP_NAME:-}" ]]; 
     --only-show-errors
 fi
 
-helm dep up "$CHART_PATH"
+# helm dep up "$CHART_PATH"
 
 helm upgrade --install cicd "$CHART_PATH" \
   -n cicd \
