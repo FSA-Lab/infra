@@ -9,7 +9,10 @@ CHART_PATH="$ROOT_DIR/config/helm/cicd"
 
 CERT_MANAGER_EMAIL="${CERT_MANAGER_EMAIL:-cert-manager@${DNS_ROOT}}"
 
-# If AKS cluster info is available, refresh kubeconfig into a temporary file
+################################################################################
+# AKS kubeconfig
+################################################################################
+
 if [[ -n "${TF_VAR_AKS_NAME:-}" && -n "${TF_VAR_AKS_RESOURCE_GROUP_NAME:-}" ]]; then
   KUBECONFIG_TMP=$(mktemp)
   export KUBECONFIG="${KUBECONFIG_TMP}"
@@ -17,6 +20,7 @@ if [[ -n "${TF_VAR_AKS_NAME:-}" && -n "${TF_VAR_AKS_RESOURCE_GROUP_NAME:-}" ]]; 
   cleanup() {
     rm -f "${KUBECONFIG_TMP}"
   }
+
   trap cleanup EXIT
 
   az aks get-credentials \
@@ -28,7 +32,51 @@ if [[ -n "${TF_VAR_AKS_NAME:-}" && -n "${TF_VAR_AKS_RESOURCE_GROUP_NAME:-}" ]]; 
     --only-show-errors
 fi
 
-helm dep up "$CHART_PATH"
+helm dep update "$CHART_PATH"
+
+################################################################################
+# cert-manager CRDs (idempotent)
+################################################################################
+
+kubectl apply -f \
+  https://github.com/cert-manager/cert-manager/releases/download/v1.19.5/cert-manager.crds.yaml
+
+################################################################################
+# cert-manager
+################################################################################
+
+# Remove old webhook configurations to avoid upgrade issues. 
+kubectl delete validatingwebhookconfiguration cert-manager-webhook \
+  --ignore-not-found=true
+
+kubectl delete mutatingwebhookconfiguration cert-manager-webhook \
+  --ignore-not-found=true
+
+# kubectl delete validatingwebhookconfiguration cicd-cert-manager-webhook \
+#   --ignore-not-found=true
+
+# kubectl delete mutatingwebhookconfiguration cicd-cert-manager-webhook \
+#   --ignore-not-found=true
+
+helm upgrade --install cert-manager jetstack/cert-manager \
+  --namespace cert-manager \
+  --create-namespace \
+  --set crds.enabled=false \
+  --wait
+
+################################################################################
+# Wait for webhook readiness
+################################################################################
+
+kubectl rollout status deployment/cert-manager-webhook \
+  -n cert-manager \
+  --timeout=5m
+
+################################################################################
+# CICD platform
+################################################################################
+
+FQDN_TEMPLATE="{{.Name}}.${DNS_ROOT}"
 
 helm upgrade --install cicd "$CHART_PATH" \
   -n cicd \
@@ -37,7 +85,7 @@ helm upgrade --install cicd "$CHART_PATH" \
   --set global.domain="$DNS_ROOT" \
   --set certManagerConfig.clusterIssuer.email="$CERT_MANAGER_EMAIL" \
   --set external-dns.domainFilters[0]="$DNS_ROOT" \
-  --set-string external-dns.fqdnTemplates[0]='{{.Name}}.'"${DNS_ROOT}" \
+  --set-json 'external-dns.fqdnTemplates=["{{.Name}}.'"${DNS_ROOT}"'"]' \
   --set secrets.postgresql.password="$KEYCLOAK_POSTGRESQL_PASSWORD" \
   --set secrets.postgresql.postgresPassword="$KEYCLOAK_POSTGRESQL_ADMIN_PASSWORD" \
   --set secrets.keycloak.adminPassword="$KEYCLOAK_ADMIN_PASSWORD" \

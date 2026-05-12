@@ -82,3 +82,9 @@ Root cause: templates/namespace.yaml creates a namespace that is not managed by 
     --> Solution:
     - Configure `secrets.jenkins.proxy.{httpProxy,httpsProxy,noProxy}` in `config/helm/cicd/values.yaml`. The chart now creates `secret/jenkins-proxy` and injects proxy env vars (`HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` + lowercase variants) into both Jenkins init and controller containers.
     - Configure Jenkins update center URLs to use a stable mirror that is accessible to avoid plugin installation failures.
+
+15. To provision HTTPS domain to services, we need to create CRDs for cert-manager, which is a dependency of the ingress controller. However, applying CRDs via Helm causes issues with idempotency and upgradeability.
+    --> Solution: apply cert-manager CRDs separately using `kubectl apply -f` before installing the Helm chart.
+
+16. Sometimes I attempted to create k8s resource in two ways (e.g. `kubectl apply -f` and Helm), which causes issue with Helm
+    --> Solution: avoid creating the same resource in multiple ways. If a resource is managed by Helm, do not create it manually using `kubectl apply -f`, and vice versa.
