@@ -30,6 +30,38 @@ secrets:
       # Comma-separated domains/IPs that should bypass proxy.
       noProxy: ""
 
+  cloudflare:
+    apiToken: ""
+
+cert-manager:
+  installCRDs: true
+
+  clusterIssuer:
+    enabled: true
+    name: letsencrypt-cloudflare
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: ""
+    privateKeySecretName: letsencrypt-cloudflare-private-key
+    cloudflare:
+      secretName: cloudflare-provider-credentials
+      apiTokenKey: api-token
+
+external-dns:
+  provider: cloudflare
+  policy: sync
+  registry: txt
+  txtOwnerId: cicd
+
+  cloudflare:
+    secretName: cloudflare-provider-credentials
+
+  sources:
+    - service
+    - ingress
+
+  domainFilters: []
+  fqdnTemplates: []
+
 ingress-nginx:
   controller:
     nodeSelector:
