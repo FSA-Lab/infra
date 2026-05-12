@@ -102,7 +102,7 @@ helm_args=(
 )
 
 if [[ -n "$SONARQUBE_ADMIN_PASSWORD" ]]; then
-  : "${SONARQUBE_CURRENT_ADMIN_PASSWORD:?SONARQUBE_CURRENT_ADMIN_PASSWORD is required when SONARQUBE_ADMIN_PASSWORD is set}"
+  : "${SONARQUBE_CURRENT_ADMIN_PASSWORD:?SONARQUBE_CURRENT_ADMIN_PASSWORD is required when SONARQUBE_ADMIN_PASSWORD is set (needed as current admin password for SonarQube password rotation)}"
   helm_args+=(
     --set secrets.sonarqube.adminPassword="$SONARQUBE_ADMIN_PASSWORD"
     --set secrets.sonarqube.currentAdminPassword="$SONARQUBE_CURRENT_ADMIN_PASSWORD"
