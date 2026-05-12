@@ -86,7 +86,6 @@ helm upgrade --install cicd "$CHART_PATH" \
   --set certManagerConfig.clusterIssuer.email="$CERT_MANAGER_EMAIL" \
   --set external-dns.domainFilters[0]="$DNS_ROOT" \
   --set-json 'external-dns.fqdnTemplates=["{{.Name}}.'"${DNS_ROOT}"'"]' \
-  --set-string ingress-nginx.controller.service.annotations.external-dns\\.alpha\\.kubernetes\\.io/hostname="jenkins.${DNS_ROOT}\,sonarqube.${DNS_ROOT}\,keycloak.${DNS_ROOT}" \
   --set jenkins.controller.ingress.hostName="jenkins.${DNS_ROOT}" \
   --set sonarqube.ingress.hosts[0].name="sonarqube.${DNS_ROOT}" \
   --set sonarqube.ingress.tls[0].hosts[0]="sonarqube.${DNS_ROOT}" \
@@ -96,3 +95,5 @@ helm upgrade --install cicd "$CHART_PATH" \
   --set secrets.jenkins.adminPassword="$JENKINS_ADMIN_PASSWORD" \
   --set secrets.jenkins.oidc.clientSecret="$JENKINS_OIDC_CLIENT_SECRET" \
   --set secrets.cloudflare.apiToken="$CLOUDFLARE_API_TOKEN"
+
+  # --set-string ingress-nginx.controller.service.annotations.external-dns\\.alpha\\.kubernetes\\.io/hostname="jenkins.${DNS_ROOT}\,sonarqube.${DNS_ROOT}\,keycloak.${DNS_ROOT}" \

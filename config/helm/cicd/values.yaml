@@ -35,7 +35,7 @@ secrets:
 
 cert-manager:
   installCRDs: false # explicitly set to false to avoid issues with idempotency and upgradeability when applying CRDs via Helm
-  enabled: false
+  enabled: true
 
 certManagerConfig:
   clusterIssuer:
@@ -60,12 +60,15 @@ external-dns:
         secretKeyRef:
           name: cloudflare-provider-credentials
           key: api-token
+  
+  logLevel: debug
 
   sources:
-    - service
+    # - service
     - ingress
 
-  domainFilters: []
+  domainFilters:
+    - vtvinh24.dev
   fqdnTemplates: []
 
 ingress-nginx:
@@ -95,6 +98,7 @@ ingress-nginx:
     service:
       annotations:
         service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: /healthz
+        external-dns.alpha.kubernetes.io/exclude: "true"
 
       externalTrafficPolicy: Local
 
