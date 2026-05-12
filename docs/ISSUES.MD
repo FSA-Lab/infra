@@ -90,3 +90,5 @@ Root cause: templates/namespace.yaml creates a namespace that is not managed by 
     --> Solution: avoid creating the same resource in multiple ways. If a resource is managed by Helm, do not create it manually using `kubectl apply -f`, and vice versa.
 17. Storage class "standard" is not available in AKS
     --> Solution: use "default" or "managed-csi" storage class instead, which is available in AKS. Update `primary.persistence.storageClass` in `config/helm/cicd/values.yaml` to "default".
+18. Cloudflare API Token scoped to a single domain does not have permissions to manage DNS records.
+    --> Solution: create a new API token with "Zone - DNS - Edit" permissions for all domains`

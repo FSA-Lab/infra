@@ -1,5 +1,5 @@
 global:
-  domain: cicd.internal
+  domain: cicdlab.vtvinh24.dev
   security:
     allowInsecureImages: true
 
@@ -423,12 +423,12 @@ sonarqube:
       cert-manager.io/cluster-issuer: letsencrypt-cloudflare
 
     hosts:
-      - name: sonarqube.cicd.internal
+      - name: sonarqube.cicdlab.vtvinh24.dev
         path: /
     tls:
       - secretName: sonarqube-tls
         hosts:
-          - sonarqube.cicd.internal
+          - sonarqube.cicdlab.vtvinh24.dev
 
   postgresql:
     enabled: false
