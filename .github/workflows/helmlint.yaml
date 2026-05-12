@@ -34,11 +34,13 @@ jobs:
           helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube
           helm repo add codecentric https://codecentric.github.io/helm-charts
           helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo add jetstack https://charts.jetstack.io
+          helm repo add external-dns https://kubernetes-sigs.github.io/external-dns/
 
           helm repo update
 
       - name: Build dependencies
-        run: helm dependency build "$CHART_DIR"
+        run: helm dependency update "$CHART_DIR"
 
       - name: Lint chart
         run: helm lint "$CHART_DIR"

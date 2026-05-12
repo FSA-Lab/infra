@@ -14,5 +14,11 @@ dependencies:
 - name: postgresql
   repository: https://charts.bitnami.com/bitnami
   version: 18.6.4
-digest: sha256:25024017e4be3cd0531afafa3dca940fe14b934fe742cdb4aefc991aa077f1fe
-generated: "2026-05-11T09:08:11.512231901Z"
+- name: cert-manager
+  repository: https://charts.jetstack.io
+  version: v1.20.2
+- name: external-dns
+  repository: https://kubernetes-sigs.github.io/external-dns/
+  version: 1.21.1
+digest: sha256:abc263de0c2d06975c1d751125292e02cd2922e91c2234bb192446f76aac8eb3
+generated: "2026-05-12T16:19:35.278339715+07:00"
