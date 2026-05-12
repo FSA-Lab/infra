@@ -13,6 +13,7 @@ CHART_PATH="$ROOT_DIR/config/helm/cicd"
 CERT_MANAGER_EMAIL="${CERT_MANAGER_EMAIL:-cert-manager@${DNS_ROOT}}"
 SONARQUBE_ADMIN_PASSWORD="${SONARQUBE_ADMIN_PASSWORD:-}"
 SONARQUBE_CURRENT_ADMIN_PASSWORD="${SONARQUBE_CURRENT_ADMIN_PASSWORD:-}"
+PLATFORM_DOMAIN="cicdlab.${DNS_ROOT}" 
 
 ################################################################################
 # AKS kubeconfig
@@ -93,12 +94,12 @@ kubectl create secret generic cloudflare-provider-credentials \
 FQDN_TEMPLATE="{{.Name}}.${DNS_ROOT}"
 
 helm_args=(
-  --set global.domain="$DNS_ROOT"
+  --set global.domain="$PLATFORM_DOMAIN"                                    # was DNS_ROOT
   --set certManagerConfig.clusterIssuer.email="$CERT_MANAGER_EMAIL"
-  --set external-dns.domainFilters[0]="$DNS_ROOT"
-  --set jenkins.controller.ingress.hostName="jenkins.${DNS_ROOT}"
-  --set sonarqube.ingress.hosts[0].name="sonarqube.${DNS_ROOT}"
-  --set sonarqube.ingress.tls[0].hosts[0]="sonarqube.${DNS_ROOT}"
+  --set external-dns.domainFilters[0]="$DNS_ROOT"                           # keep root
+  --set jenkins.controller.ingress.hostName="jenkins.${PLATFORM_DOMAIN}"   # was DNS_ROOT
+  --set sonarqube.ingress.hosts[0].name="sonarqube.${PLATFORM_DOMAIN}"     # was DNS_ROOT
+  --set sonarqube.ingress.tls[0].hosts[0]="sonarqube.${PLATFORM_DOMAIN}"   # was DNS_ROOT
   --set secrets.postgresql.password="$KEYCLOAK_POSTGRESQL_PASSWORD"
   --set secrets.postgresql.postgresPassword="$KEYCLOAK_POSTGRESQL_ADMIN_PASSWORD"
   --set secrets.keycloak.adminUser="$KEYCLOAK_ADMIN_USER"
