@@ -36,6 +36,7 @@ secrets:
 cert-manager:
   installCRDs: true
 
+certManagerConfig:
   clusterIssuer:
     enabled: true
     name: letsencrypt-cloudflare

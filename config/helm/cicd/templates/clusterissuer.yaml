@@ -1,18 +1,18 @@
-{{- if and .Values.cert-manager.clusterIssuer.enabled .Values.cert-manager.clusterIssuer.email .Values.secrets.cloudflare.apiToken }}
+{{- if and .Values.certManagerConfig.clusterIssuer.enabled .Values.certManagerConfig.clusterIssuer.email .Values.secrets.cloudflare.apiToken }}
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
-  name: {{ .Values.cert-manager.clusterIssuer.name }}
+  name: {{ .Values.certManagerConfig.clusterIssuer.name }}
 spec:
   acme:
-    server: {{ .Values.cert-manager.clusterIssuer.server | quote }}
-    email: {{ .Values.cert-manager.clusterIssuer.email | quote }}
+    server: {{ .Values.certManagerConfig.clusterIssuer.server | quote }}
+    email: {{ .Values.certManagerConfig.clusterIssuer.email | quote }}
     privateKeySecretRef:
-      name: {{ .Values.cert-manager.clusterIssuer.privateKeySecretName }}
+      name: {{ .Values.certManagerConfig.clusterIssuer.privateKeySecretName }}
     solvers:
       - dns01:
           cloudflare:
             apiTokenSecretRef:
-              name: {{ .Values.cert-manager.clusterIssuer.cloudflare.secretName }}
-              key: {{ .Values.cert-manager.clusterIssuer.cloudflare.apiTokenKey }}
+              name: {{ .Values.certManagerConfig.clusterIssuer.cloudflare.secretName }}
+              key: {{ .Values.certManagerConfig.clusterIssuer.cloudflare.apiTokenKey }}
 {{- end }}

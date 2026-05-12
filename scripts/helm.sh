@@ -35,7 +35,7 @@ helm upgrade --install cicd "$CHART_PATH" \
   --create-namespace \
   --timeout 15m \
   --set global.domain="$DNS_ROOT" \
-  --set cert-manager.clusterIssuer.email="$CERT_MANAGER_EMAIL" \
+  --set certManagerConfig.clusterIssuer.email="$CERT_MANAGER_EMAIL" \
   --set external-dns.domainFilters[0]="$DNS_ROOT" \
   --set external-dns.fqdnTemplates[0]="{{.Name}}.${DNS_ROOT}" \
   --set secrets.postgresql.password="$KEYCLOAK_POSTGRESQL_PASSWORD" \
