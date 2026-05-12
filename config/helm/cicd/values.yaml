@@ -32,9 +32,9 @@ secrets:
       noProxy: ""
 
   sonarqube:
-    monitoringPasscode: "change-me"
+    monitoringPasscode: ""
     adminPassword: ""
-    currentAdminPassword: "admin"
+    currentAdminPassword: ""
 
   cloudflare:
     apiToken: ""
