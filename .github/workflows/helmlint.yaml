@@ -35,6 +35,7 @@ jobs:
           helm repo add codecentric https://codecentric.github.io/helm-charts
           helm repo add bitnami https://charts.bitnami.com/bitnami
           helm repo add jetstack https://charts.jetstack.io
+          helm repo add external-dns https://kubernetes-sigs.github.io/external-dns/
 
           helm repo update
 

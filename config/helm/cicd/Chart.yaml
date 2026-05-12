@@ -33,5 +33,5 @@ dependencies:
     repository: "https://charts.jetstack.io"
 
   - name: external-dns
-    version: "9.0.3"
-    repository: "https://charts.bitnami.com/bitnami"
+    version: "1.21.1"
+    repository: "https://kubernetes-sigs.github.io/external-dns/"

@@ -18,7 +18,7 @@ dependencies:
   repository: https://charts.jetstack.io
   version: v1.20.2
 - name: external-dns
-  repository: https://charts.bitnami.com/bitnami
-  version: 9.0.3
-digest: sha256:3aeab2af41a45bdf349fd45ced183b1e2190215f9b27e0f22daa636bdd82f843
-generated: "2026-05-12T02:55:41.21603145Z"
+  repository: https://kubernetes-sigs.github.io/external-dns/
+  version: 1.21.1
+digest: sha256:5fad8a037db2e555bfa157cad2bed7a24461460e7e3ee4187f3752782a975645
+generated: "2026-05-12T03:16:10.216174838Z"
