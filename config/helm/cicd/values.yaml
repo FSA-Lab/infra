@@ -12,11 +12,11 @@ secrets:
     postgresPassword: ""
 
   keycloak:
-    adminUser: admin
+    adminUser: ""
     adminPassword: ""
 
   jenkins:
-    adminUser: admin
+    adminUser: ""
     adminPassword: ""
 
     oidc:
