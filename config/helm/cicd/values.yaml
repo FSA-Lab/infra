@@ -12,6 +12,7 @@ secrets:
     postgresPassword: ""
 
   keycloak:
+    adminUser: admin
     adminPassword: ""
 
   jenkins:
@@ -29,6 +30,11 @@ secrets:
       httpsProxy: ""
       # Comma-separated domains/IPs that should bypass proxy.
       noProxy: ""
+
+  sonarqube:
+    monitoringPasscode: "change-me"
+    adminPassword: ""
+    currentAdminPassword: "admin"
 
   cloudflare:
     apiToken: ""
@@ -359,7 +365,8 @@ sonarqube:
   community:
     enabled: true
 
-  monitoringPasscode: "change-me"
+  monitoringPasscodeSecretName: sonarqube-monitoring
+  monitoringPasscodeSecretKey: monitoring-passcode
 
   nodeSelector:
     workload: tools
@@ -426,7 +433,10 @@ keycloak:
 
   extraEnv: |
     - name: KEYCLOAK_ADMIN
-      value: admin
+      valueFrom:
+        secretKeyRef:
+          name: keycloak-admin
+          key: admin-user
     - name: KEYCLOAK_ADMIN_PASSWORD
       valueFrom:
         secretKeyRef:

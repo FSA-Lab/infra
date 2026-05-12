@@ -8,6 +8,11 @@ CHART_PATH="$ROOT_DIR/config/helm/cicd"
 : "${CLOUDFLARE_API_TOKEN:?CLOUDFLARE_API_TOKEN is required}"
 
 CERT_MANAGER_EMAIL="${CERT_MANAGER_EMAIL:-cert-manager@${DNS_ROOT}}"
+JENKINS_ADMIN_USER="${JENKINS_ADMIN_USER:-admin}"
+KEYCLOAK_ADMIN_USER="${KEYCLOAK_ADMIN_USER:-admin}"
+SONARQUBE_MONITORING_PASSCODE="${SONARQUBE_MONITORING_PASSCODE:-change-me}"
+SONARQUBE_ADMIN_PASSWORD="${SONARQUBE_ADMIN_PASSWORD:-}"
+SONARQUBE_CURRENT_ADMIN_PASSWORD="${SONARQUBE_CURRENT_ADMIN_PASSWORD:-admin}"
 
 ################################################################################
 # AKS kubeconfig
@@ -78,22 +83,37 @@ kubectl rollout status deployment/cert-manager-webhook \
 
 FQDN_TEMPLATE="{{.Name}}.${DNS_ROOT}"
 
+helm_args=(
+  --set global.domain="$DNS_ROOT"
+  --set certManagerConfig.clusterIssuer.email="$CERT_MANAGER_EMAIL"
+  --set external-dns.domainFilters[0]="$DNS_ROOT"
+  --set jenkins.controller.ingress.hostName="jenkins.${DNS_ROOT}"
+  --set sonarqube.ingress.hosts[0].name="sonarqube.${DNS_ROOT}"
+  --set sonarqube.ingress.tls[0].hosts[0]="sonarqube.${DNS_ROOT}"
+  --set secrets.postgresql.password="$KEYCLOAK_POSTGRESQL_PASSWORD"
+  --set secrets.postgresql.postgresPassword="$KEYCLOAK_POSTGRESQL_ADMIN_PASSWORD"
+  --set secrets.keycloak.adminUser="$KEYCLOAK_ADMIN_USER"
+  --set secrets.keycloak.adminPassword="$KEYCLOAK_ADMIN_PASSWORD"
+  --set secrets.jenkins.adminUser="$JENKINS_ADMIN_USER"
+  --set secrets.jenkins.adminPassword="$JENKINS_ADMIN_PASSWORD"
+  --set secrets.jenkins.oidc.clientSecret="$JENKINS_OIDC_CLIENT_SECRET"
+  --set secrets.sonarqube.monitoringPasscode="$SONARQUBE_MONITORING_PASSCODE"
+  --set secrets.cloudflare.apiToken="$CLOUDFLARE_API_TOKEN"
+)
+
+if [[ -n "$SONARQUBE_ADMIN_PASSWORD" ]]; then
+  helm_args+=(
+    --set secrets.sonarqube.adminPassword="$SONARQUBE_ADMIN_PASSWORD"
+    --set secrets.sonarqube.currentAdminPassword="$SONARQUBE_CURRENT_ADMIN_PASSWORD"
+    --set sonarqube.setAdminPassword.passwordSecretName="sonarqube-admin-password"
+  )
+fi
+
 helm upgrade --install cicd "$CHART_PATH" \
   -n cicd \
   --create-namespace \
   --timeout 15m \
-  --set global.domain="$DNS_ROOT" \
-  --set certManagerConfig.clusterIssuer.email="$CERT_MANAGER_EMAIL" \
-  --set external-dns.domainFilters[0]="$DNS_ROOT" \
-  --set jenkins.controller.ingress.hostName="jenkins.${DNS_ROOT}" \
-  --set sonarqube.ingress.hosts[0].name="sonarqube.${DNS_ROOT}" \
-  --set sonarqube.ingress.tls[0].hosts[0]="sonarqube.${DNS_ROOT}" \
-  --set secrets.postgresql.password="$KEYCLOAK_POSTGRESQL_PASSWORD" \
-  --set secrets.postgresql.postgresPassword="$KEYCLOAK_POSTGRESQL_ADMIN_PASSWORD" \
-  --set secrets.keycloak.adminPassword="$KEYCLOAK_ADMIN_PASSWORD" \
-  --set secrets.jenkins.adminPassword="$JENKINS_ADMIN_PASSWORD" \
-  --set secrets.jenkins.oidc.clientSecret="$JENKINS_OIDC_CLIENT_SECRET" \
-  --set secrets.cloudflare.apiToken="$CLOUDFLARE_API_TOKEN"
+  "${helm_args[@]}"
 
   # --set-json 'external-dns.fqdnTemplates=["{{.Name}}.'"${DNS_ROOT}"'"]' \ # all ingresses has explicit hostnames
   # --set-string ingress-nginx.controller.service.annotations.external-dns\\.alpha\\.kubernetes\\.io/hostname="jenkins.${DNS_ROOT}\,sonarqube.${DNS_ROOT}\,keycloak.${DNS_ROOT}" \ # removed to exclude ingress-nginx from external-dns management, as it only manages the default backend service which doesn't have a stable hostname and is not intended to be exposed externally
