@@ -347,7 +347,7 @@ jenkins:
                 clientSecret: "${KEYCLOAK_CLIENT_SECRET}"
                 serverConfiguration:
                   wellKnown:
-                    wellKnownOpenIDConfigurationUrl: "https://keycloak.cicdlab.vtvinh24.dev/realms/cicd/.well-known/openid-configuration"
+                    wellKnownOpenIDConfigurationUrl: "https://keycloak.cicdlab.vtvinh24.dev/auth/realms/cicd/.well-known/openid-configuration"
                 userNameField: "preferred_username"
                 fullNameFieldName: "name"
                 emailFieldName: "email"
@@ -453,7 +453,7 @@ keycloak:
     rules:
       - host: keycloak.cicdlab.vtvinh24.dev
         paths:
-          - path: /auth/
+          - path: /
             pathType: Prefix
     tls:
       - hosts:
