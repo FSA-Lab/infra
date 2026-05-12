@@ -35,7 +35,7 @@ secrets:
 
 cert-manager:
   installCRDs: false # explicitly set to false to avoid issues with idempotency and upgradeability when applying CRDs via Helm
-  enabled: true
+  enabled: false
 
 certManagerConfig:
   clusterIssuer:

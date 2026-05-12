@@ -85,7 +85,6 @@ helm upgrade --install cicd "$CHART_PATH" \
   --set global.domain="$DNS_ROOT" \
   --set certManagerConfig.clusterIssuer.email="$CERT_MANAGER_EMAIL" \
   --set external-dns.domainFilters[0]="$DNS_ROOT" \
-  --set-json 'external-dns.fqdnTemplates=["{{.Name}}.'"${DNS_ROOT}"'"]' \
   --set jenkins.controller.ingress.hostName="jenkins.${DNS_ROOT}" \
   --set sonarqube.ingress.hosts[0].name="sonarqube.${DNS_ROOT}" \
   --set sonarqube.ingress.tls[0].hosts[0]="sonarqube.${DNS_ROOT}" \
@@ -96,4 +95,5 @@ helm upgrade --install cicd "$CHART_PATH" \
   --set secrets.jenkins.oidc.clientSecret="$JENKINS_OIDC_CLIENT_SECRET" \
   --set secrets.cloudflare.apiToken="$CLOUDFLARE_API_TOKEN"
 
-  # --set-string ingress-nginx.controller.service.annotations.external-dns\\.alpha\\.kubernetes\\.io/hostname="jenkins.${DNS_ROOT}\,sonarqube.${DNS_ROOT}\,keycloak.${DNS_ROOT}" \
+  # --set-json 'external-dns.fqdnTemplates=["{{.Name}}.'"${DNS_ROOT}"'"]' \ # all ingresses has explicit hostnames
+  # --set-string ingress-nginx.controller.service.annotations.external-dns\\.alpha\\.kubernetes\\.io/hostname="jenkins.${DNS_ROOT}\,sonarqube.${DNS_ROOT}\,keycloak.${DNS_ROOT}" \ # removed to exclude ingress-nginx from external-dns management, as it only manages the default backend service which doesn't have a stable hostname and is not intended to be exposed externally
