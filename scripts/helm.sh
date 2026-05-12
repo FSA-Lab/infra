@@ -52,11 +52,11 @@ kubectl delete validatingwebhookconfiguration cert-manager-webhook \
 kubectl delete mutatingwebhookconfiguration cert-manager-webhook \
   --ignore-not-found=true
 
-# kubectl delete validatingwebhookconfiguration cicd-cert-manager-webhook \
-#   --ignore-not-found=true
+kubectl delete validatingwebhookconfiguration cicd-cert-manager-webhook \
+  --ignore-not-found=true
 
-# kubectl delete mutatingwebhookconfiguration cicd-cert-manager-webhook \
-#   --ignore-not-found=true
+kubectl delete mutatingwebhookconfiguration cicd-cert-manager-webhook \
+  --ignore-not-found=true
 
 helm upgrade --install cert-manager jetstack/cert-manager \
   --namespace cert-manager \
