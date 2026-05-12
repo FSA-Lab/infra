@@ -40,7 +40,7 @@ jobs:
           helm repo update
 
       - name: Build dependencies
-        run: helm dependency build "$CHART_DIR"
+        run: helm dependency update "$CHART_DIR"
 
       - name: Lint chart
         run: helm lint "$CHART_DIR"
