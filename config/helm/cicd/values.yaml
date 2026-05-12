@@ -503,7 +503,7 @@ postgresql:
   primary:
     persistence:
       enabled: true
-      storageClass: standard
+      storageClass: managed-csi # AKS-specific storage class
       size: 20Gi
 
     nodeSelector:

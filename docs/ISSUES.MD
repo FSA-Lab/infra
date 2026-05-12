@@ -88,3 +88,5 @@ Root cause: templates/namespace.yaml creates a namespace that is not managed by 
 
 16. Sometimes I attempted to create k8s resource in two ways (e.g. `kubectl apply -f` and Helm), which causes issue with Helm
     --> Solution: avoid creating the same resource in multiple ways. If a resource is managed by Helm, do not create it manually using `kubectl apply -f`, and vice versa.
+17. Storage class "standard" is not available in AKS
+    --> Solution: use "default" or "managed-csi" storage class instead, which is available in AKS. Update `primary.persistence.storageClass` in `config/helm/cicd/values.yaml` to "default".
