@@ -78,6 +78,15 @@ kubectl rollout status deployment/cert-manager-webhook \
   --timeout=5m
 
 ################################################################################
+# Copy Cloudflare secret to cert-manager namespace (required by ClusterIssuer)
+################################################################################
+
+kubectl create secret generic cloudflare-provider-credentials \
+  --namespace cert-manager \
+  --from-literal=api-token="$CLOUDFLARE_API_TOKEN" \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+################################################################################
 # CICD platform
 ################################################################################
 
