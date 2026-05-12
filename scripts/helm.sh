@@ -37,7 +37,7 @@ helm upgrade --install cicd "$CHART_PATH" \
   --set global.domain="$DNS_ROOT" \
   --set certManagerConfig.clusterIssuer.email="$CERT_MANAGER_EMAIL" \
   --set external-dns.domainFilters[0]="$DNS_ROOT" \
-  --set external-dns.fqdnTemplates[0]="{{.Name}}.${DNS_ROOT}" \
+  --set-string external-dns.fqdnTemplates[0]='{{.Name}}.'"${DNS_ROOT}" \
   --set secrets.postgresql.password="$KEYCLOAK_POSTGRESQL_PASSWORD" \
   --set secrets.postgresql.postgresPassword="$KEYCLOAK_POSTGRESQL_ADMIN_PASSWORD" \
   --set secrets.keycloak.adminPassword="$KEYCLOAK_ADMIN_PASSWORD" \
