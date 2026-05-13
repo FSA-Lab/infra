@@ -12,10 +12,11 @@ secrets:
     postgresPassword: ""
 
   keycloak:
+    adminUser: ""
     adminPassword: ""
 
   jenkins:
-    adminUser: admin
+    adminUser: ""
     adminPassword: ""
 
     oidc:
@@ -29,6 +30,11 @@ secrets:
       httpsProxy: ""
       # Comma-separated domains/IPs that should bypass proxy.
       noProxy: ""
+
+  sonarqube:
+    monitoringPasscode: ""
+    adminPassword: ""
+    currentAdminPassword: ""
 
   cloudflare:
     apiToken: ""
@@ -158,12 +164,13 @@ jenkins:
       - configuration-as-code
       - workflow-aggregator
       - git
+      - github
       - credentials-binding
       - pipeline-stage-view
       - blueocean
       - job-dsl
       - sonar
-      - oic-auth
+      # - oic-auth
 
     # Keep both uppercase and lowercase proxy vars for compatibility across Java, curl, and plugin tooling.
     initContainerEnv:
@@ -232,6 +239,35 @@ jenkins:
           secretKeyRef:
             name: jenkins-oidc
             key: client-secret
+    
+    additionalJobs:
+      - name: app-k8s
+        jobDsl: |
+          pipelineJob('app-k8s') {
+            description('Pipeline for FSA-Lab/app-k8s')
+
+            triggers {
+              githubPush()
+            }
+
+            definition {
+              cpsScm {
+                lightweight(true)
+
+                scm {
+                  git {
+                    remote {
+                      url('https://github.com/FSA-Lab/app-k8s.git')
+                    }
+
+                    branch('*/main')
+                  }
+                }
+
+                scriptPath('Jenkinsfile')
+              }
+            }
+          }
 
     JCasC:
       defaultConfig: false
@@ -336,17 +372,22 @@ jenkins:
                               secret:
                                 secretName: acr-creds
             securityRealm:
-              oic:
-                clientId: "${KEYCLOAK_CLIENT_ID}"
-                clientSecret: "${KEYCLOAK_CLIENT_SECRET}"
-                serverConfiguration:
-                  wellKnown:
-                    wellKnownOpenIDConfigurationUrl: "https://keycloak.cicdlab.vtvinh24.dev/realms/cicd/.well-known/openid-configuration"
-                userNameField: "preferred_username"
-                fullNameFieldName: "name"
-                emailFieldName: "email"
-                groupsFieldName: "groups"
-                disableSslVerification: false
+              # oic:
+              #   clientId: "${KEYCLOAK_CLIENT_ID}"
+              #   clientSecret: "${KEYCLOAK_CLIENT_SECRET}"
+              #   serverConfiguration:
+              #     wellKnown:
+              #       wellKnownOpenIDConfigurationUrl: "https://keycloak.cicdlab.vtvinh24.dev/auth/realms/cicd/.well-known/openid-configuration"
+              #   userNameField: "preferred_username"
+              #   fullNameFieldName: "name"
+              #   emailFieldName: "email"
+              #   groupsFieldName: "groups"
+              #   disableSslVerification: false
+              local:
+                allowsSignup: false
+                users:
+                  - id: "${chart-admin-username}"
+                    password: "${chart-admin-password}"
             authorizationStrategy:
               loggedInUsersCanDoAnything:
                 allowAnonymousRead: false
@@ -359,7 +400,8 @@ sonarqube:
   community:
     enabled: true
 
-  monitoringPasscode: "change-me"
+  monitoringPasscodeSecretName: sonarqube-monitoring
+  monitoringPasscodeSecretKey: monitoring-passcode
 
   nodeSelector:
     workload: tools
@@ -426,7 +468,10 @@ keycloak:
 
   extraEnv: |
     - name: KEYCLOAK_ADMIN
-      value: admin
+      valueFrom:
+        secretKeyRef:
+          name: keycloak-admin
+          key: admin-user
     - name: KEYCLOAK_ADMIN_PASSWORD
       valueFrom:
         secretKeyRef:
@@ -443,7 +488,7 @@ keycloak:
     rules:
       - host: keycloak.cicdlab.vtvinh24.dev
         paths:
-          - path: /auth/
+          - path: /
             pathType: Prefix
     tls:
       - hosts:
